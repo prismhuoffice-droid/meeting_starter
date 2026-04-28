@@ -681,16 +681,20 @@ function renderCalendarView(data){
       el('cal-grid-wrap').innerHTML=buildChecklistView(prevSlots,gCalSlots);
     } else {
       gCalSlots=(data.mySlots||[]).slice();
-      if(data.timeMode==='fixed'){
-        setText('cal-inst-title','ご都合のよい日付をクリックしてください');
-        setText('cal-inst-body','時間帯は '+pad2(data.calConfig.startHour)+':00〜'+pad2(data.calConfig.endHour)+':00 で固定です。');
-        el('cal-legend').innerHTML='';
-        el('cal-grid-wrap').innerHTML=buildChecklistView(data.prevVipSlots.length>0?data.prevVipSlots:getAllowedSlotsClient_(data),gCalSlots);
-      } else {
+      var useGrid=data.dateMode==='range'&&data.timeMode==='selectable';
+      if(useGrid){
         setText('cal-inst-title','ご都合のよい日時の枠をクリックしてください');
         setText('cal-inst-body','複数選択できます。もう一度クリックすると解除されます。');
         el('cal-legend').innerHTML='<div class="legend-item"><div class="legend-box" style="background:#bfdbfe;border-color:#60a5fa"></div><span>選択済み</span></div>';
         el('cal-grid-wrap').innerHTML=buildCalGrid(data.calConfig,gCalSlots,[],false,data.meetingDuration||60);
+      } else {
+        var instTitle=data.timeMode==='fixed'?'ご都合のよい日付をクリックしてください':'ご都合のよい日時をクリックしてください';
+        var instBody=data.timeMode==='fixed'?'時間帯は '+pad2(data.calConfig.startHour)+':00〜'+pad2(data.calConfig.endHour)+':00 で固定です。':'複数選択できます。もう一度クリックすると解除されます。';
+        setText('cal-inst-title',instTitle);
+        setText('cal-inst-body',instBody);
+        el('cal-legend').innerHTML='';
+        var slotsToShow=data.allowedSlots||data.prevVipSlots||[];
+        el('cal-grid-wrap').innerHTML=buildChecklistView(slotsToShow,gCalSlots);
       }
     }
     updateCalCount();
@@ -705,13 +709,6 @@ function buildChecklistView(prevSlots,selected){
   return h+'</div>';
 }
 function toggleChecklistSlot(item){var iso=item.getAttribute('data-iso');var idx=gCalSlots.indexOf(iso);if(idx>=0){gCalSlots.splice(idx,1);item.className='hslot-item ng';item.querySelector('.hslot-check').textContent='\u00d7';}else{gCalSlots.push(iso);item.className='hslot-item ok';item.querySelector('.hslot-check').textContent='\u2713';}updateCalCount();}
-/** VIP1用: サーバーが返すスロット一覧をクライアント側で再現（fixedモード） */
-function getAllowedSlotsClient_(data){
-  var cfg=data.calConfig;if(!cfg)return [];
-  var sh=cfg.startHour||13;
-  return [buildSlotIsoClient_(cfg.start,sh,0)];
-}
-function buildSlotIsoClient_(dateStr,h,m){return dateStr+'T'+pad2(h)+':'+pad2(m||0)+':00';}
 
 function buildCalGrid(cfg,selected,prevSlots,isLater,duration){
   if(!cfg||!cfg.start||!cfg.end)return'<p class="text-muted">\u671f\u9593\u304c\u8a2d\u5b9a\u3055\u308c\u3066\u3044\u307e\u305b\u3093\u3002</p>';
