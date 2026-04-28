@@ -786,6 +786,7 @@ function renderMeetingDetailContents(cur){
   var x;x=el('a-title');if(x)x.value=cfg.title||'';x=el('a-month');if(x)x.value=cfg.month||'';x=el('a-deadline');if(x)x.value=cfg.deadline||'';
   x=el('a-cal-start');if(x)x.value=cfg.cal_start||'';x=el('a-cal-end');if(x)x.value=cfg.cal_end||'';
   x=el('a-cal-sh');if(x)x.value=pad2(parseInt(cfg.cal_start_hour||13))+':00';x=el('a-cal-eh');if(x)x.value=pad2(parseInt(cfg.cal_end_hour||18))+':00';
+  var sd=cfg.specific_dates;gSpecificDates=Array.isArray(sd)?sd:(typeof sd==='string'&&sd?JSON.parse(sd):[]);renderSpecificDateList();
   renderParticipantsInput(cur.participants,vc);renderVipTabs(cur);renderOverlapArea(cur);renderVotingTab(cur);renderConfirmTab(cur);renderMaterialsList('a-materials-list',cur.materials||[],true);
 }
 
@@ -808,7 +809,13 @@ function renderDynamicTabs(vc,vipParts){
   h+='<button class="btn btn-outline btn-sm mt-4" onclick="addParticipantRow()">\uff0b \u53c2\u52a0\u8005\u3092\u8ffd\u52a0</button>';
   h+='<div id="a-setup-msg"></div><div class="mt-4"><button class="btn btn-primary" onclick="saveSetup()">\u8a2d\u5b9a\u3092\u4fdd\u5b58\u3059\u308b</button></div>';
   h+='<hr class="divider"><div class="section-title">\u8abf\u6574\u671f\u9593\u30fb\u6642\u9593\u5e2f\u306e\u8a2d\u5b9a</div>';
-  h+='<div class="form-inline"><div class="form-row mb-0"><label>\u958b\u59cb\u65e5</label><input type="date" id="a-cal-start" onchange="autoSetEndDate()"></div><div class="form-row mb-0"><label>\u7d42\u4e86\u65e5</label><input type="date" id="a-cal-end"></div><div class="form-row mb-0"><label>\u958b\u59cb\u6642\u523b</label><input type="time" id="a-cal-sh" value="13:00" step="3600"></div><div class="form-row mb-0"><label>\u7d42\u4e86\u6642\u523b</label><input type="time" id="a-cal-eh" value="18:00" step="3600"></div><button class="btn btn-outline btn-sm" onclick="savePeriod()" style="margin-top:18px">\u4fdd\u5b58</button></div><div id="a-prof-msg" style="margin-top:8px"></div>';
+  h+='<p class="text-sm text-muted" style="margin-bottom:8px">方法1: 期間で指定（平日が自動で候補になります）</p>';
+  h+='<div class="form-inline"><div class="form-row mb-0"><label>開始日</label><input type="date" id="a-cal-start" onchange="autoSetEndDate()"></div><div class="form-row mb-0"><label>終了日</label><input type="date" id="a-cal-end"></div><div class="form-row mb-0"><label>開始時刻</label><input type="time" id="a-cal-sh" value="13:00" step="3600"></div><div class="form-row mb-0"><label>終了時刻</label><input type="time" id="a-cal-eh" value="18:00" step="3600"></div></div>';
+  h+='<p class="text-sm text-muted" style="margin:14px 0 8px">方法2: 日付を個別に指定（会議室の空きが限られている場合など）</p>';
+  h+='<div class="form-inline"><div class="form-row mb-0"><label>日付を追加</label><input type="date" id="a-specific-date"></div><button class="btn btn-outline btn-sm" onclick="addSpecificDate()" style="margin-top:18px">＋ 追加</button></div>';
+  h+='<div id="a-specific-list" style="margin:8px 0"></div>';
+  h+='<p class="text-sm text-muted" style="margin-top:6px">※ 両方を併用できます。時間帯は上の設定が共通で適用されます。</p>';
+  h+='<div class="mt-4"><button class="btn btn-primary" onclick="savePeriod()">調整期間を保存する</button></div><div id="a-prof-msg" style="margin-top:8px"></div>';
   h+='</div>';
   /* VIP tabs */
   for(var v=1;v<=vc;v++){h+='<div id="tab-vip_'+v+'" class="tab-content">'+buildVipTabHtml(v,vipParts[v-1]||null,vipParts[v-2]||null,vc)+'</div>';}
@@ -954,7 +961,34 @@ function autoSetEndDate(){
   var d=new Date(s.value+'T00:00:00');var lastDay=new Date(d.getFullYear(),d.getMonth()+1,0);
   e.value=lastDay.getFullYear()+'-'+pad2(lastDay.getMonth()+1)+'-'+pad2(lastDay.getDate());
 }
-function savePeriod(){var s=el('a-cal-start').value,e=el('a-cal-end').value;var shS=el('a-cal-sh').value||'13:00',ehS=el('a-cal-eh').value||'18:00';var sh=parseInt(shS.split(':')[0],10),eh=parseInt(ehS.split(':')[0],10);if(!s||!e){setHtml('a-prof-msg','<div class="msg msg-error">開始日と終了日を入力してください。</div>');return;}if(isNaN(sh)||isNaN(eh)||sh>=eh){setHtml('a-prof-msg','<div class="msg msg-error">開始時刻は終了時刻より前にしてください。</div>');return;}setHtml('a-prof-msg','<div class="msg msg-info">保存中...</div>');google.script.run.withSuccessHandler(function(r){if(!r){setHtml('a-prof-msg','<div class="msg msg-error">サーバーから応答がありません。</div>');return;}if(r.ok){var vc=gAdminData?parseInt(gAdminData.cfg.vip_count||'0',10):0;var nextLabel=vc>0?getVipName_(1)+'のタブに進み、URLを送信してください。':'候補確定タブに進んでください。';setHtml('a-prof-msg',buildStepGuideMsg_('期間を保存しました。',nextLabel));loadAdminData();}else setHtml('a-prof-msg','<div class="msg msg-error">保存に失敗：'+esc(r.error||'')+'</div>');}).withFailureHandler(function(err){setHtml('a-prof-msg','<div class="msg msg-error">通信エラー：'+esc((err&&err.message)||String(err))+'</div>');}).adminSetPeriod(ADMIN_TOKEN,gCurrentMeetingId,s,e,sh,eh);}
+var gSpecificDates=[];
+function addSpecificDate(){
+  var inp=el('a-specific-date');if(!inp||!inp.value)return;
+  var v=inp.value;if(gSpecificDates.indexOf(v)>=0){setHtml('a-prof-msg','<div class="msg msg-error">同じ日付が既に追加されています。</div>');return;}
+  gSpecificDates.push(v);gSpecificDates.sort();inp.value='';renderSpecificDateList();
+}
+function removeSpecificDate(idx){gSpecificDates.splice(idx,1);renderSpecificDateList();}
+function renderSpecificDateList(){
+  var le=el('a-specific-list');if(!le)return;
+  if(gSpecificDates.length===0){le.innerHTML='';return;}
+  var JP=['日','月','火','水','木','金','土'];
+  le.innerHTML=gSpecificDates.map(function(ds,i){var d=new Date(ds+'T00:00:00');var lbl=(d.getMonth()+1)+'/'+d.getDate()+'（'+JP[d.getDay()]+'）';return '<span style="display:inline-flex;align-items:center;gap:4px;background:var(--blue-lt);border-radius:6px;padding:4px 10px;margin:3px;font-size:.85rem">'+esc(lbl)+'<button style="background:none;border:none;cursor:pointer;color:var(--red);font-size:.9rem;padding:0 2px" onclick="removeSpecificDate('+i+')">×</button></span>';}).join('');
+}
+function savePeriod(){
+  var s=el('a-cal-start').value||'',e=el('a-cal-end').value||'';
+  var shS=el('a-cal-sh').value||'13:00',ehS=el('a-cal-eh').value||'18:00';
+  var sh=parseInt(shS.split(':')[0],10),eh=parseInt(ehS.split(':')[0],10);
+  var hasRange=s&&e;var hasDates=gSpecificDates.length>0;
+  if(!hasRange&&!hasDates){setHtml('a-prof-msg','<div class="msg msg-error">期間を指定するか、個別の日付を追加してください。</div>');return;}
+  if(isNaN(sh)||isNaN(eh)||sh>=eh){setHtml('a-prof-msg','<div class="msg msg-error">開始時刻は終了時刻より前にしてください。</div>');return;}
+  setHtml('a-prof-msg','<div class="msg msg-info">保存中...</div>');
+  google.script.run.withSuccessHandler(function(r){
+    if(!r){setHtml('a-prof-msg','<div class="msg msg-error">サーバーから応答がありません。</div>');return;}
+    if(r.ok){var vc=gAdminData?parseInt(gAdminData.cfg.vip_count||'0',10):0;var nextLabel=vc>0?getVipName_(1)+'のタブに進み、URLを送信してください。':'候補確定タブに進んでください。';setHtml('a-prof-msg',buildStepGuideMsg_('調整期間を保存しました。',nextLabel));loadAdminData();}
+    else setHtml('a-prof-msg','<div class="msg msg-error">保存に失敗：'+esc(r.error||'')+'</div>');
+  }).withFailureHandler(function(err){setHtml('a-prof-msg','<div class="msg msg-error">通信エラー：'+esc((err&&err.message)||String(err))+'</div>');
+  }).adminSetPeriod(ADMIN_TOKEN,gCurrentMeetingId,s,e,sh,eh,gSpecificDates);
+}
 function buildStepGuideMsg_(done,next){return '<div class="msg msg-success" style="display:flex;flex-direction:column;gap:6px"><span>'+esc(done)+'</span><span style="font-weight:600;color:var(--blue)">→ 次のステップ：'+esc(next)+'</span></div>';}
 function getVipName_(n){if(!gAdminData)return 'VIP'+n;var vp=gAdminData.vipParticipants;return (vp&&vp[n-1])?honorific(vp[n-1].name):'VIP'+n;}
 
