@@ -681,10 +681,17 @@ function renderCalendarView(data){
       el('cal-grid-wrap').innerHTML=buildChecklistView(prevSlots,gCalSlots);
     } else {
       gCalSlots=(data.mySlots||[]).slice();
-      setText('cal-inst-title','\u3054\u90fd\u5408\u306e\u3088\u3044\u65e5\u6642\u306e\u679a\u3092\u30af\u30ea\u30c3\u30af\u3057\u3066\u304f\u3060\u3055\u3044');
-      setText('cal-inst-body','\u8907\u6570\u9078\u629e\u3067\u304d\u307e\u3059\u3002\u3082\u3046\u4e00\u5ea6\u30af\u30ea\u30c3\u30af\u3059\u308b\u3068\u89e3\u9664\u3055\u308c\u307e\u3059\u3002');
-      el('cal-legend').innerHTML='<div class="legend-item"><div class="legend-box" style="background:#bfdbfe;border-color:#60a5fa"></div><span>\u9078\u629e\u6e08\u307f</span></div>';
-      el('cal-grid-wrap').innerHTML=buildCalGrid(data.calConfig,gCalSlots,[],false);
+      if(data.timeMode==='fixed'){
+        setText('cal-inst-title','ご都合のよい日付をクリックしてください');
+        setText('cal-inst-body','時間帯は '+pad2(data.calConfig.startHour)+':00〜'+pad2(data.calConfig.endHour)+':00 で固定です。');
+        el('cal-legend').innerHTML='';
+        el('cal-grid-wrap').innerHTML=buildChecklistView(data.prevVipSlots.length>0?data.prevVipSlots:getAllowedSlotsClient_(data),gCalSlots);
+      } else {
+        setText('cal-inst-title','ご都合のよい日時の枠をクリックしてください');
+        setText('cal-inst-body','複数選択できます。もう一度クリックすると解除されます。');
+        el('cal-legend').innerHTML='<div class="legend-item"><div class="legend-box" style="background:#bfdbfe;border-color:#60a5fa"></div><span>選択済み</span></div>';
+        el('cal-grid-wrap').innerHTML=buildCalGrid(data.calConfig,gCalSlots,[],false,data.meetingDuration||60);
+      }
     }
     updateCalCount();
     if(data.responded)el('cal-msg').innerHTML='<div class="msg msg-success">\u9001\u4fe1\u6e08\u307f\u3067\u3059\u3002\u5909\u66f4\u304c\u3042\u308b\u5834\u5408\u306f\u518d\u5ea6\u9001\u4fe1\u3057\u3066\u304f\u3060\u3055\u3044\u3002</div>';
@@ -698,16 +705,27 @@ function buildChecklistView(prevSlots,selected){
   return h+'</div>';
 }
 function toggleChecklistSlot(item){var iso=item.getAttribute('data-iso');var idx=gCalSlots.indexOf(iso);if(idx>=0){gCalSlots.splice(idx,1);item.className='hslot-item ng';item.querySelector('.hslot-check').textContent='\u00d7';}else{gCalSlots.push(iso);item.className='hslot-item ok';item.querySelector('.hslot-check').textContent='\u2713';}updateCalCount();}
-function buildCalGrid(cfg,selected,prevSlots,isLater){
+/** VIP1用: サーバーが返すスロット一覧をクライアント側で再現（fixedモード） */
+function getAllowedSlotsClient_(data){
+  var cfg=data.calConfig;if(!cfg)return [];
+  var sh=cfg.startHour||13;
+  return [buildSlotIsoClient_(cfg.start,sh,0)];
+}
+function buildSlotIsoClient_(dateStr,h,m){return dateStr+'T'+pad2(h)+':'+pad2(m||0)+':00';}
+
+function buildCalGrid(cfg,selected,prevSlots,isLater,duration){
   if(!cfg||!cfg.start||!cfg.end)return'<p class="text-muted">\u671f\u9593\u304c\u8a2d\u5b9a\u3055\u308c\u3066\u3044\u307e\u305b\u3093\u3002</p>';
-  var days=getWeekdays(cfg.start,cfg.end),hours=getHours(cfg.startHour,cfg.endHour);
+  duration=duration||60;
+  var days=getWeekdays(cfg.start,cfg.end);
+  var slots=[];var startMin=cfg.startHour*60,endMin=cfg.endHour*60;
+  for(var mm=startMin;mm+duration<=endMin;mm+=duration)slots.push({h:Math.floor(mm/60),m:mm%60});
   if(days.length===0)return'<p class="text-muted">\u8868\u793a\u3067\u304d\u308b\u65e5\u304c\u3042\u308a\u307e\u305b\u3093\u3002</p>';
   var later=(isLater===true);var JP=['\u65e5','\u6708','\u706b','\u6c34','\u6728','\u91d1','\u571f'];
   var h='<div class="cal-wrap"><table class="cal-table"><thead><tr><th class="cal-time-th"></th>';
   days.forEach(function(d){h+='<th class="cal-day-th">'+(d.getMonth()+1)+'/'+d.getDate()+'<br>('+JP[d.getDay()]+')</th>';});
   h+='</tr></thead><tbody>';
-  hours.forEach(function(hour){h+='<tr><td class="cal-time-td">'+pad2(hour)+':00</td>';
-    days.forEach(function(d){var iso=toIso(d,hour);var isSel=selected.indexOf(iso)>=0;var isPrev=prevSlots.indexOf(iso)>=0;var disabled=later&&!isPrev;var cls='cal-slot';
+  slots.forEach(function(sl){var timeLabel=pad2(sl.h)+':'+pad2(sl.m);h+='<tr><td class="cal-time-td">'+timeLabel+'</td>';
+    days.forEach(function(d){var iso=d.getFullYear()+'-'+pad2(d.getMonth()+1)+'-'+pad2(d.getDate())+'T'+pad2(sl.h)+':'+pad2(sl.m)+':00';var isSel=selected.indexOf(iso)>=0;var isPrev=prevSlots.indexOf(iso)>=0;var disabled=later&&!isPrev;var cls='cal-slot';
       if(disabled){h+='<td class="'+cls+' cal-disabled" data-iso="'+iso+'"></td>';}
       else if(later&&isSel){h+='<td class="'+cls+' cal-prev cal-selected" data-iso="'+iso+'" onclick="toggleCalSlot(this)"></td>';}
       else if(later){h+='<td class="'+cls+' cal-prev" data-iso="'+iso+'" onclick="toggleCalSlot(this)"></td>';}
@@ -787,6 +805,11 @@ function renderMeetingDetailContents(cur){
   x=el('a-cal-start');if(x)x.value=cfg.cal_start||'';x=el('a-cal-end');if(x)x.value=cfg.cal_end||'';
   x=el('a-cal-sh');if(x)x.value=pad2(parseInt(cfg.cal_start_hour||13))+':00';x=el('a-cal-eh');if(x)x.value=pad2(parseInt(cfg.cal_end_hour||18))+':00';
   var sd=cfg.specific_dates;gSpecificDates=Array.isArray(sd)?sd:(typeof sd==='string'&&sd?JSON.parse(sd):[]);renderSpecificDateList();
+  /* モード復元 */
+  var dm=cfg.date_mode||'range';var dmr=document.querySelector('input[name="a-date-mode"][value="'+dm+'"]');if(dmr){dmr.checked=true;toggleDateMode();}
+  var tm=cfg.time_mode||'selectable';var tmr=document.querySelector('input[name="a-time-mode"][value="'+tm+'"]');if(tmr){tmr.checked=true;toggleTimeMode();}
+  if(tm==='fixed'){x=el('a-fixed-sh');if(x)x.value=pad2(parseInt(cfg.cal_start_hour||17))+':00';x=el('a-fixed-eh');if(x)x.value=pad2(parseInt(cfg.cal_end_hour||19))+':00';}
+  x=el('a-duration');if(x)x.value=String(cfg.meeting_duration||'60');
   renderParticipantsInput(cur.participants,vc);renderVipTabs(cur);renderOverlapArea(cur);renderVotingTab(cur);renderConfirmTab(cur);renderMaterialsList('a-materials-list',cur.materials||[],true);
 }
 
@@ -808,14 +831,19 @@ function renderDynamicTabs(vc,vipParts){
   h+='<div class="table-wrap"><table class="p-table"><thead><tr><th style="width:120px">\u5f79\u5272</th><th>\u6c0f\u540d</th><th>\u30e1\u30fc\u30eb\u30a2\u30c9\u30ec\u30b9</th><th style="width:36px"></th></tr></thead><tbody id="a-p-tbody"></tbody></table></div>';
   h+='<button class="btn btn-outline btn-sm mt-4" onclick="addParticipantRow()">\uff0b \u53c2\u52a0\u8005\u3092\u8ffd\u52a0</button>';
   h+='<div id="a-setup-msg"></div><div class="mt-4"><button class="btn btn-primary" onclick="saveSetup()">\u8a2d\u5b9a\u3092\u4fdd\u5b58\u3059\u308b</button></div>';
-  h+='<hr class="divider"><div class="section-title">\u8abf\u6574\u671f\u9593\u30fb\u6642\u9593\u5e2f\u306e\u8a2d\u5b9a</div>';
-  h+='<p class="text-sm text-muted" style="margin-bottom:8px">方法1: 期間で指定（平日が自動で候補になります）</p>';
-  h+='<div class="form-inline"><div class="form-row mb-0"><label>開始日</label><input type="date" id="a-cal-start" onchange="autoSetEndDate()"></div><div class="form-row mb-0"><label>終了日</label><input type="date" id="a-cal-end"></div><div class="form-row mb-0"><label>開始時刻</label><input type="time" id="a-cal-sh" value="13:00" step="3600"></div><div class="form-row mb-0"><label>終了時刻</label><input type="time" id="a-cal-eh" value="18:00" step="3600"></div></div>';
-  h+='<p class="text-sm text-muted" style="margin:14px 0 8px">方法2: 日付を個別に指定（会議室の空きが限られている場合など）</p>';
-  h+='<div class="form-inline"><div class="form-row mb-0"><label>日付を追加</label><input type="date" id="a-specific-date"></div><button class="btn btn-outline btn-sm" onclick="addSpecificDate()" style="margin-top:18px">＋ 追加</button></div>';
-  h+='<div id="a-specific-list" style="margin:8px 0"></div>';
-  h+='<p class="text-sm text-muted" style="margin-top:6px">※ 両方を併用できます。時間帯は上の設定が共通で適用されます。</p>';
-  h+='<div class="mt-4"><button class="btn btn-primary" onclick="savePeriod()">調整期間を保存する</button></div><div id="a-prof-msg" style="margin-top:8px"></div>';
+  h+='<hr class="divider"><div class="section-title">候補日・時間帯の設定</div>';
+  /* 日程指定モード */
+  h+='<div class="form-row"><label>日程の指定方法</label><div style="display:flex;gap:16px;margin-top:4px"><label style="font-weight:normal;cursor:pointer"><input type="radio" name="a-date-mode" value="range" checked onchange="toggleDateMode()"> 期間で指定（平日が候補）</label><label style="font-weight:normal;cursor:pointer"><input type="radio" name="a-date-mode" value="specific" onchange="toggleDateMode()"> 日付を個別に指定</label></div></div>';
+  h+='<div id="a-date-range-area"><div class="form-inline"><div class="form-row mb-0"><label>開始日</label><input type="date" id="a-cal-start" onchange="autoSetEndDate()"></div><div class="form-row mb-0"><label>終了日</label><input type="date" id="a-cal-end"></div></div></div>';
+  h+='<div id="a-date-specific-area" style="display:none"><div class="form-inline"><div class="form-row mb-0"><label>日付を追加</label><input type="date" id="a-specific-date"></div><button class="btn btn-outline btn-sm" onclick="addSpecificDate()" style="margin-top:18px">＋ 追加</button></div><div id="a-specific-list" style="margin:8px 0"></div></div>';
+  /* 時間モード */
+  h+='<hr class="divider">';
+  h+='<div class="form-row"><label>時間帯の扱い</label><div style="display:flex;gap:16px;margin-top:4px"><label style="font-weight:normal;cursor:pointer"><input type="radio" name="a-time-mode" value="selectable" checked onchange="toggleTimeMode()"> VIPが時間帯を選択する</label><label style="font-weight:normal;cursor:pointer"><input type="radio" name="a-time-mode" value="fixed" onchange="toggleTimeMode()"> 時間帯を固定する</label></div></div>';
+  h+='<div id="a-time-selectable-area"><div class="form-inline"><div class="form-row mb-0"><label>候補の開始時刻</label><input type="time" id="a-cal-sh" value="13:00" step="3600"></div><div class="form-row mb-0"><label>候補の終了時刻</label><input type="time" id="a-cal-eh" value="18:00" step="3600"></div></div></div>';
+  h+='<div id="a-time-fixed-area" style="display:none"><div class="form-inline"><div class="form-row mb-0"><label>開始時刻</label><input type="time" id="a-fixed-sh" value="17:00" step="900"></div><div class="form-row mb-0"><label>終了時刻</label><input type="time" id="a-fixed-eh" value="19:00" step="900"></div></div><p class="text-sm text-muted" style="margin-top:4px">VIPには日付のみ表示され、この時間帯が自動で設定されます。</p></div>';
+  /* 所要時間 */
+  h+='<div class="form-row" style="margin-top:14px"><label>会議の所要時間</label><select id="a-duration" style="max-width:180px"><option value="30">30分</option><option value="45">45分</option><option value="60" selected>1時間</option><option value="75">1時間15分</option><option value="90">1時間30分</option><option value="105">1時間45分</option><option value="120">2時間</option><option value="150">2時間30分</option><option value="180">3時間</option></select></div>';
+  h+='<div class="mt-4"><button class="btn btn-primary" onclick="savePeriod()">候補日・時間帯を保存する</button></div><div id="a-prof-msg" style="margin-top:8px"></div>';
   h+='</div>';
   /* VIP tabs */
   for(var v=1;v<=vc;v++){h+='<div id="tab-vip_'+v+'" class="tab-content">'+buildVipTabHtml(v,vipParts[v-1]||null,vipParts[v-2]||null,vc)+'</div>';}
@@ -961,6 +989,8 @@ function autoSetEndDate(){
   var d=new Date(s.value+'T00:00:00');var lastDay=new Date(d.getFullYear(),d.getMonth()+1,0);
   e.value=lastDay.getFullYear()+'-'+pad2(lastDay.getMonth()+1)+'-'+pad2(lastDay.getDate());
 }
+function toggleDateMode(){var m=document.querySelector('input[name="a-date-mode"]:checked');if(!m)return;var v=m.value;el('a-date-range-area').style.display=v==='range'?'':'none';el('a-date-specific-area').style.display=v==='specific'?'':'none';}
+function toggleTimeMode(){var m=document.querySelector('input[name="a-time-mode"]:checked');if(!m)return;var v=m.value;el('a-time-selectable-area').style.display=v==='selectable'?'':'none';el('a-time-fixed-area').style.display=v==='fixed'?'':'none';}
 var gSpecificDates=[];
 function addSpecificDate(){
   var inp=el('a-specific-date');if(!inp||!inp.value)return;
@@ -975,19 +1005,29 @@ function renderSpecificDateList(){
   le.innerHTML=gSpecificDates.map(function(ds,i){var d=new Date(ds+'T00:00:00');var lbl=(d.getMonth()+1)+'/'+d.getDate()+'（'+JP[d.getDay()]+'）';return '<span style="display:inline-flex;align-items:center;gap:4px;background:var(--blue-lt);border-radius:6px;padding:4px 10px;margin:3px;font-size:.85rem">'+esc(lbl)+'<button style="background:none;border:none;cursor:pointer;color:var(--red);font-size:.9rem;padding:0 2px" onclick="removeSpecificDate('+i+')">×</button></span>';}).join('');
 }
 function savePeriod(){
+  var dateMode=(document.querySelector('input[name="a-date-mode"]:checked')||{}).value||'range';
+  var timeMode=(document.querySelector('input[name="a-time-mode"]:checked')||{}).value||'selectable';
   var s=el('a-cal-start').value||'',e=el('a-cal-end').value||'';
-  var shS=el('a-cal-sh').value||'13:00',ehS=el('a-cal-eh').value||'18:00';
-  var sh=parseInt(shS.split(':')[0],10),eh=parseInt(ehS.split(':')[0],10);
-  var hasRange=s&&e;var hasDates=gSpecificDates.length>0;
-  if(!hasRange&&!hasDates){setHtml('a-prof-msg','<div class="msg msg-error">期間を指定するか、個別の日付を追加してください。</div>');return;}
+  var duration=parseInt((el('a-duration')||{}).value||'60',10);
+  var sh,eh;
+  if(timeMode==='fixed'){
+    var fsh=el('a-fixed-sh').value||'17:00',feh=el('a-fixed-eh').value||'19:00';
+    sh=parseInt(fsh.split(':')[0],10);eh=parseInt(feh.split(':')[0],10);
+  } else {
+    var shS=el('a-cal-sh').value||'13:00',ehS=el('a-cal-eh').value||'18:00';
+    sh=parseInt(shS.split(':')[0],10);eh=parseInt(ehS.split(':')[0],10);
+  }
+  if(dateMode==='range'&&(!s||!e)){setHtml('a-prof-msg','<div class="msg msg-error">開始日と終了日を入力してください。</div>');return;}
+  if(dateMode==='specific'&&gSpecificDates.length===0){setHtml('a-prof-msg','<div class="msg msg-error">日付を追加してください。</div>');return;}
   if(isNaN(sh)||isNaN(eh)||sh>=eh){setHtml('a-prof-msg','<div class="msg msg-error">開始時刻は終了時刻より前にしてください。</div>');return;}
   setHtml('a-prof-msg','<div class="msg msg-info">保存中...</div>');
+  var opts={start:s,end:e,startHour:sh,endHour:eh,specificDates:gSpecificDates,dateMode:dateMode,timeMode:timeMode,meetingDuration:duration};
   google.script.run.withSuccessHandler(function(r){
     if(!r){setHtml('a-prof-msg','<div class="msg msg-error">サーバーから応答がありません。</div>');return;}
-    if(r.ok){var vc=gAdminData?parseInt(gAdminData.cfg.vip_count||'0',10):0;var nextLabel=vc>0?getVipName_(1)+'のタブに進み、URLを送信してください。':'候補確定タブに進んでください。';setHtml('a-prof-msg',buildStepGuideMsg_('調整期間を保存しました。',nextLabel));loadAdminData();}
+    if(r.ok){var vc=gAdminData?parseInt(gAdminData.cfg.vip_count||'0',10):0;var nextLabel=vc>0?getVipName_(1)+'のタブに進み、URLを送信してください。':'候補確定タブに進んでください。';setHtml('a-prof-msg',buildStepGuideMsg_('候補日・時間帯を保存しました。',nextLabel));loadAdminData();}
     else setHtml('a-prof-msg','<div class="msg msg-error">保存に失敗：'+esc(r.error||'')+'</div>');
   }).withFailureHandler(function(err){setHtml('a-prof-msg','<div class="msg msg-error">通信エラー：'+esc((err&&err.message)||String(err))+'</div>');
-  }).adminSetPeriod(ADMIN_TOKEN,gCurrentMeetingId,s,e,sh,eh,gSpecificDates);
+  }).adminSetPeriod(ADMIN_TOKEN,gCurrentMeetingId,opts);
 }
 function buildStepGuideMsg_(done,next){return '<div class="msg msg-success" style="display:flex;flex-direction:column;gap:6px"><span>'+esc(done)+'</span><span style="font-weight:600;color:var(--blue)">→ 次のステップ：'+esc(next)+'</span></div>';}
 function getVipName_(n){if(!gAdminData)return 'VIP'+n;var vp=gAdminData.vipParticipants;return (vp&&vp[n-1])?honorific(vp[n-1].name):'VIP'+n;}
