@@ -824,7 +824,7 @@ function renderMeetingDetailContents(cur){
   var x;x=el('a-title');if(x)x.value=cfg.title||'';x=el('a-month');if(x)x.value=cfg.month||'';x=el('a-deadline');if(x)x.value=cfg.deadline||'';
   x=el('a-cal-start');if(x)x.value=cfg.cal_start||'';x=el('a-cal-end');if(x)x.value=cfg.cal_end||'';
   x=el('a-cal-sh');if(x)x.value=pad2(parseInt(cfg.cal_start_hour||13))+':00';x=el('a-cal-eh');if(x)x.value=pad2(parseInt(cfg.cal_end_hour||18))+':00';
-  var sd=cfg.specific_dates;gSpecificDates=Array.isArray(sd)?sd:(typeof sd==='string'&&sd?JSON.parse(sd):[]);renderSpecificDateList();
+  var sd=cfg.specific_dates;gSpecificDates=Array.isArray(sd)?sd:parseJsonArraySafe_(sd);renderSpecificDateList();
   /* モード復元 */
   var dm=cfg.date_mode||'range';var dmr=document.querySelector('input[name="a-date-mode"][value="'+dm+'"]');if(dmr){dmr.checked=true;toggleDateMode();}
   var tm=cfg.time_mode||'selectable';var tmr=document.querySelector('input[name="a-time-mode"][value="'+tm+'"]');if(tmr){tmr.checked=true;toggleTimeMode();}
@@ -853,7 +853,7 @@ function renderDynamicTabs(vc,vipParts){
   h+='<div id="a-setup-msg"></div><div class="mt-4"><button class="btn btn-primary" onclick="saveSetup()">\u8a2d\u5b9a\u3092\u4fdd\u5b58\u3059\u308b</button></div>';
   h+='<hr class="divider"><div class="section-title">候補日・時間帯の設定</div>';
   /* 日程指定モード */
-  h+='<div class="form-row"><label>日程の指定方法</label><div style="display:flex;gap:16px;margin-top:4px"><label style="font-weight:normal;cursor:pointer"><input type="radio" name="a-date-mode" value="range" checked onchange="toggleDateMode()"> 期間で指定（平日が候補）</label><label style="font-weight:normal;cursor:pointer"><input type="radio" name="a-date-mode" value="specific" onchange="toggleDateMode()"> 日付を個別に指定</label></div></div>';
+  h+='<div class="form-row"><label>日程の指定方法</label><div style="display:flex;gap:16px;margin-top:4px"><label style="font-weight:normal;cursor:pointer"><input type="radio" name="a-date-mode" value="range" checked onchange="toggleDateMode()"> 期間で指定</label><label style="font-weight:normal;cursor:pointer"><input type="radio" name="a-date-mode" value="specific" onchange="toggleDateMode()"> 日付を個別に指定</label></div></div>';
   h+='<div id="a-date-range-area"><div class="form-inline"><div class="form-row mb-0"><label>開始日</label><input type="date" id="a-cal-start" onchange="autoSetEndDate()"></div><div class="form-row mb-0"><label>終了日</label><input type="date" id="a-cal-end"></div></div></div>';
   h+='<div id="a-date-specific-area" style="display:none"><div class="form-inline"><div class="form-row mb-0"><label>日付を追加</label><input type="date" id="a-specific-date"></div><button class="btn btn-outline btn-sm" onclick="addSpecificDate()" style="margin-top:18px">＋ 追加</button></div><div id="a-specific-list" style="margin:8px 0"></div></div>';
   /* 時間モード */
@@ -1011,6 +1011,7 @@ function autoSetEndDate(){
 }
 function toggleDateMode(){var m=document.querySelector('input[name="a-date-mode"]:checked');if(!m)return;var v=m.value;el('a-date-range-area').style.display=v==='range'?'':'none';el('a-date-specific-area').style.display=v==='specific'?'':'none';}
 function toggleTimeMode(){var m=document.querySelector('input[name="a-time-mode"]:checked');if(!m)return;var v=m.value;el('a-time-selectable-area').style.display=v==='selectable'?'':'none';el('a-time-fixed-area').style.display=v==='fixed'?'':'none';}
+function parseJsonArraySafe_(value){try{var parsed=JSON.parse(value||'[]');return Array.isArray(parsed)?parsed:[];}catch(_){return[];}}
 var gSpecificDates=[];
 function addSpecificDate(){
   var inp=el('a-specific-date');if(!inp||!inp.value)return;
@@ -1041,7 +1042,7 @@ function savePeriod(){
   if(dateMode==='specific'&&gSpecificDates.length===0){setHtml('a-prof-msg','<div class="msg msg-error">日付を追加してください。</div>');return;}
   if(isNaN(sh)||isNaN(eh)||sh>=eh){setHtml('a-prof-msg','<div class="msg msg-error">開始時刻は終了時刻より前にしてください。</div>');return;}
   setHtml('a-prof-msg','<div class="msg msg-info">保存中...</div>');
-  var opts={start:s,end:e,startHour:sh,endHour:eh,specificDates:gSpecificDates,dateMode:dateMode,timeMode:timeMode,meetingDuration:duration};
+  var opts={start:dateMode==='range'?s:'',end:dateMode==='range'?e:'',startHour:sh,endHour:eh,specificDates:dateMode==='specific'?gSpecificDates.slice():[],dateMode:dateMode,timeMode:timeMode,meetingDuration:duration};
   google.script.run.withSuccessHandler(function(r){
     if(!r){setHtml('a-prof-msg','<div class="msg msg-error">サーバーから応答がありません。</div>');return;}
     if(r.ok){var vc=gAdminData?parseInt(gAdminData.cfg.vip_count||'0',10):0;var nextLabel=vc>0?getVipName_(1)+'のタブに進み、URLを送信してください。':'候補確定タブに進んでください。';setHtml('a-prof-msg',buildStepGuideMsg_('候補日・時間帯を保存しました。',nextLabel));loadAdminData();}
