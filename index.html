@@ -458,6 +458,9 @@ function buildCurrentUrlWithoutSecret_(viewMode) {
 if (RAW_ADMIN_TOKEN && window.history && window.history.replaceState) {
   window.history.replaceState(null, '', buildCurrentUrlWithoutSecret_('admin'));
 }
+if (!RAW_ADMIN_TOKEN && ADMIN_TOKEN && VIEW_MODE !== 'admin' && window.history && window.history.replaceState) {
+  window.history.replaceState(null, '', buildCurrentUrlWithoutSecret_('admin'));
+}
 
 var gGreeting          = '';  /* 敬称（先生/様/さん等） */
 var gAdminData         = null;
