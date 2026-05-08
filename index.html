@@ -423,7 +423,7 @@ hr.divider{border:none;border-top:1px solid var(--border);margin:18px 0}
 
 <script>
 /* ============================================================================
- * PRISM MeetSync v4 テンプレート版
+ * PRISM MeetSync v5 テンプレート版
  * orgs.json ベースのマルチテナント構成
  * ============================================================================ */
 var URL_PARAMS  = new URLSearchParams(window.location.search);
@@ -567,7 +567,7 @@ function esc(s){return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').
 function pad2(n){return String(n).padStart(2,'0');}
 function toIso(d,h){return d.getFullYear()+'-'+pad2(d.getMonth()+1)+'-'+pad2(d.getDate())+'T'+pad2(h)+':00:00';}
 function isoToJp(iso){var d=new Date(iso),JP=['\u65e5','\u6708','\u706b','\u6c34','\u6728','\u91d1','\u571f'];return(d.getMonth()+1)+'\u6708'+d.getDate()+'\u65e5\uff08'+JP[d.getDay()]+'\uff09'+pad2(d.getHours())+':'+pad2(d.getMinutes());}
-function getWeekdays(s,e){var out=[],cur=new Date(s+'T00:00:00'),end=new Date(e+'T23:59:59');while(cur<=end){if(cur.getDay()!==0&&cur.getDay()!==6)out.push(new Date(cur));cur.setDate(cur.getDate()+1);}return out;}
+function getWeekdays(s,e){var out=[],cur=new Date(s+'T00:00:00'),end=new Date(e+'T23:59:59');while(cur<=end){out.push(new Date(cur));cur.setDate(cur.getDate()+1);}return out;}
 function getHours(sh,eh){var a=[];for(var h=sh;h<eh;h++)a.push(h);return a;}
 function copyEl(id){var t=el(id).textContent;if(navigator.clipboard){navigator.clipboard.writeText(t).then(function(){alert('\u30b3\u30d4\u30fc\u3057\u307e\u3057\u305f');});}else{var ta=document.createElement('textarea');ta.value=t;document.body.appendChild(ta);ta.select();document.execCommand('copy');document.body.removeChild(ta);alert('\u30b3\u30d4\u30fc\u3057\u307e\u3057\u305f');}}
 function b64ToBlob(b64,mime){var bin=atob(b64),len=bin.length,buf=new Uint8Array(len);for(var i=0;i<len;i++)buf[i]=bin.charCodeAt(i);return new Blob([buf],{type:mime||'application/octet-stream'});}
@@ -826,7 +826,7 @@ function renderMeetingDetailContents(cur){
   x=el('a-cal-sh');if(x)x.value=pad2(parseInt(cfg.cal_start_hour||13))+':00';x=el('a-cal-eh');if(x)x.value=pad2(parseInt(cfg.cal_end_hour||18))+':00';
   var sd=cfg.specific_dates;gSpecificDates=Array.isArray(sd)?sd:parseJsonArraySafe_(sd);renderSpecificDateList();
   /* モード復元 */
-  var dm=cfg.date_mode||'range';var dmr=document.querySelector('input[name="a-date-mode"][value="'+dm+'"]');if(dmr){dmr.checked=true;toggleDateMode();}
+  var dm=inferDateModeClient_(cfg,gSpecificDates);var dmr=document.querySelector('input[name="a-date-mode"][value="'+dm+'"]');if(dmr){dmr.checked=true;toggleDateMode();}
   var tm=cfg.time_mode||'selectable';var tmr=document.querySelector('input[name="a-time-mode"][value="'+tm+'"]');if(tmr){tmr.checked=true;toggleTimeMode();}
   if(tm==='fixed'){x=el('a-fixed-sh');if(x)x.value=pad2(parseInt(cfg.cal_start_hour||17))+':00';x=el('a-fixed-eh');if(x)x.value=pad2(parseInt(cfg.cal_end_hour||19))+':00';}
   x=el('a-duration');if(x)x.value=String(cfg.meeting_duration||'60');
@@ -1011,11 +1011,13 @@ function autoSetEndDate(){
 }
 function toggleDateMode(){var m=document.querySelector('input[name="a-date-mode"]:checked');if(!m)return;var v=m.value;el('a-date-range-area').style.display=v==='range'?'':'none';el('a-date-specific-area').style.display=v==='specific'?'':'none';}
 function toggleTimeMode(){var m=document.querySelector('input[name="a-time-mode"]:checked');if(!m)return;var v=m.value;el('a-time-selectable-area').style.display=v==='selectable'?'':'none';el('a-time-fixed-area').style.display=v==='fixed'?'':'none';}
-function parseJsonArraySafe_(value){try{var parsed=JSON.parse(value||'[]');return Array.isArray(parsed)?parsed:[];}catch(_){return[];}}
+function normalizeDateClient_(value){if(!value)return'';var s=String(value).trim();var m=s.match(/^(\d{4})[-\/](\d{1,2})[-\/](\d{1,2})$/);if(!m)return'';return m[1]+'-'+('0'+parseInt(m[2],10)).slice(-2)+'-'+('0'+parseInt(m[3],10)).slice(-2);}
+function parseJsonArraySafe_(value){try{var parsed=JSON.parse(value||'[]');if(!Array.isArray(parsed))return[];var seen={};return parsed.map(normalizeDateClient_).filter(function(v){if(!v||seen[v])return false;seen[v]=true;return true;}).sort();}catch(_){return[];}}
+function inferDateModeClient_(cfg,specificDates){if((specificDates||[]).length>0)return'specific';return(cfg&&cfg.date_mode)||'range';}
 var gSpecificDates=[];
 function addSpecificDate(){
   var inp=el('a-specific-date');if(!inp||!inp.value)return;
-  var v=inp.value;if(gSpecificDates.indexOf(v)>=0){setHtml('a-prof-msg','<div class="msg msg-error">同じ日付が既に追加されています。</div>');return;}
+  var v=normalizeDateClient_(inp.value);if(!v){setHtml('a-prof-msg','<div class="msg msg-error">日付の形式が正しくありません。</div>');return;}if(gSpecificDates.indexOf(v)>=0){setHtml('a-prof-msg','<div class="msg msg-error">同じ日付が既に追加されています。</div>');return;}
   gSpecificDates.push(v);gSpecificDates.sort();inp.value='';renderSpecificDateList();
 }
 function removeSpecificDate(idx){gSpecificDates.splice(idx,1);renderSpecificDateList();}
