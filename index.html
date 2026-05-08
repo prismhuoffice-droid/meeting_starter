@@ -184,6 +184,15 @@ input:focus,select:focus,textarea:focus{outline:none;border-color:var(--blue)}
 .url-box{display:flex;gap:8px;align-items:center;background:var(--gray-lt);border-radius:8px;padding:9px 13px;font-size:.78rem;font-family:monospace;color:var(--gray);word-break:break-all;margin:6px 0}
 .section-title{font-size:.95rem;font-weight:700;margin:22px 0 10px}
 hr.divider{border:none;border-top:1px solid var(--border);margin:18px 0}
+.deadline-cal-wrap{border:1px solid var(--border);border-radius:8px;padding:10px;display:inline-block;min-width:280px;background:#fff}
+.deadline-cal-display{display:flex;align-items:center;justify-content:center;margin-bottom:8px}
+.deadline-cal-table{width:100%;border-collapse:collapse;font-size:.85rem}
+.deadline-cal-table th{padding:4px;text-align:center;color:var(--gray);font-weight:600}
+.deadline-cal-table td{padding:6px;text-align:center;cursor:pointer;border-radius:4px}
+.deadline-cal-table td.dc-empty{cursor:default;color:transparent}
+.deadline-cal-table td.dc-past{cursor:not-allowed;color:var(--border)}
+.deadline-cal-table td.dc-selected{background:var(--blue);color:#fff;font-weight:600}
+.deadline-cal-table td:not(.dc-empty):not(.dc-past):not(.dc-selected):hover{background:var(--blue-lt)}
 .step-guide{display:flex;overflow-x:auto;padding-bottom:8px;margin-bottom:20px;border-bottom:1px solid var(--border)}
 .sg-item{flex:0 0 auto;display:flex;flex-direction:column;align-items:center;padding:0 10px;position:relative;min-width:80px}
 .sg-item:not(:last-child)::after{content:">";position:absolute;right:-4px;top:5px;font-size:1.2rem;color:var(--border)}
@@ -423,7 +432,7 @@ hr.divider{border:none;border-top:1px solid var(--border);margin:18px 0}
 
 <script>
 /* ============================================================================
- * PRISM MeetSync v5 テンプレート版
+ * PRISM MeetSync v6 テンプレート版
  * orgs.json ベースのマルチテナント構成
  * ============================================================================ */
 var URL_PARAMS  = new URLSearchParams(window.location.search);
@@ -627,12 +636,19 @@ function renderPublicVipCalendar(data){
   var vc=parseInt(data.vipCount||'0',10);
   var vipInfo=data.vipInfo||[];
   var cal=data.calConfig;
-  if(vc===0||!cal||!cal.start||!cal.end||vipInfo.length===0){wrap.textContent='';return;}
+  if(vc===0||!cal||vipInfo.length===0){wrap.textContent='';return;}
   var anyResp=vipInfo.some(function(v){return v.responded&&v.slots.length>0;});
   if(!anyResp){wrap.textContent='';return;}
-  var days=getWeekdays(cal.start,cal.end);
+  /* 範囲指定 / 個別指定 両モード対応 */
+  var days=[];
+  var dateMode=data.dateMode||'range';
+  if(dateMode==='specific'&&Array.isArray(data.specificDates)&&data.specificDates.length>0){
+    days=data.specificDates.map(function(s){return new Date(s+'T00:00:00');}).filter(function(d){return!isNaN(d.getTime());}).sort(function(a,b){return a-b;});
+  }else if(cal.start&&cal.end){
+    days=getWeekdays(cal.start,cal.end);
+  }
   var hours=getHours(cal.startHour,cal.endHour);
-  if(days.length===0||hours.length===0){wrap.textContent='';return;}
+  if(days.length===0||hours.length===0){wrap.textContent='候補日時の準備中です。';return;}
   var slotMap={};
   var VIP_COLORS=['cal-vip1','cal-vip2','cal-vip3'];
   vipInfo.forEach(function(v){(v.slots||[]).forEach(function(iso){if(!slotMap[iso])slotMap[iso]=[];slotMap[iso].push(v.vipNum);});});
@@ -822,6 +838,7 @@ function renderMeetingDetailContents(cur){
   updateDynamicSteps(vc,vn,cfg.month||'');setHtml('a-badge',statusBadge(cfg.status));
   renderStepGuide(cfg.status,vc,vn);
   var x;x=el('a-title');if(x)x.value=cfg.title||'';x=el('a-month');if(x)x.value=cfg.month||'';x=el('a-deadline');if(x)x.value=cfg.deadline||'';
+  initDeadlineCalendar(cfg.month||'',cfg.deadline||'');
   x=el('a-cal-start');if(x)x.value=cfg.cal_start||'';x=el('a-cal-end');if(x)x.value=cfg.cal_end||'';
   x=el('a-cal-sh');if(x)x.value=pad2(parseInt(cfg.cal_start_hour||13))+':00';x=el('a-cal-eh');if(x)x.value=pad2(parseInt(cfg.cal_end_hour||18))+':00';
   var sd=cfg.specific_dates;gSpecificDates=Array.isArray(sd)?sd:parseJsonArraySafe_(sd);renderSpecificDateList();
@@ -845,7 +862,7 @@ function renderDynamicTabs(vc,vipParts){
   h+='<div id="tab-setup" class="tab-content active">';
   h+='<div class="form-row"><label>\u4f1a\u8b70\u540d</label><input type="text" id="a-title"></div>';
   h+='<div class="form-row"><label>\u958b\u50ac\u6708</label><input type="number" id="a-month" min="1" max="12" step="1" placeholder="\u4f8b\uff1a5" style="max-width:160px"><p class="text-sm text-muted" style="margin-top:4px">1\u301c12 \u306e\u6570\u5b57\u3092\u5165\u529b\u3002</p></div>';
-  h+='<div class="form-row"><label>\u56de\u7b54\u671f\u9650</label><input type="date" id="a-deadline"></div>';
+  h+='<input type="hidden" id="a-deadline">';
   h+='<hr class="divider"><div class="section-title">\u53c2\u52a0\u8005\u30ea\u30b9\u30c8</div>';
   h+='<p class="text-sm text-muted" style="margin-bottom:10px">VIP = \u30ab\u30ec\u30f3\u30c0\u30fc\u3067\u7a7a\u304d\u6642\u9593\u3092\u5165\u529b\u3001\u6295\u7968\u8005 = \u51fa\u6b20\u56de\u7b54</p>';
   h+='<div class="table-wrap"><table class="p-table"><thead><tr><th style="width:120px">\u5f79\u5272</th><th>\u6c0f\u540d</th><th>\u30e1\u30fc\u30eb\u30a2\u30c9\u30ec\u30b9</th><th style="width:36px"></th></tr></thead><tbody id="a-p-tbody"></tbody></table></div>';
@@ -872,7 +889,7 @@ function renderDynamicTabs(vc,vipParts){
   var candDesc=vc===0?'候補日時を直接入力して投票者に打診できます。':'VIPが共通で選んだ時間帯から最終候補を選んでください。';
   h+='<div id="tab-candidates" class="tab-content"><div class="info-box info-box-blue"><h3>候補の選択</h3><p>'+candDesc+'</p></div><div id="a-overlap-area" style="margin-top:16px"></div><div id="a-cand-msg"></div><div class="mt-4">'+candBtn+'</div></div>';
   /* Voting */
-  h+='<div id="tab-voting" class="tab-content"><div class="flex justify-between items-center flex-wrap gap-2" style="margin-bottom:14px"><span id="a-vote-stats" class="text-sm"></span><button class="btn btn-gray btn-sm" onclick="loadAdminData()">\u66f4\u65b0</button></div><div id="a-matrix-wrap" class="table-wrap"></div><hr class="divider"><div class="section-title">\u53c2\u52a0\u8005\u4e00\u89a7</div><div class="table-wrap"><table><thead><tr><th>\u5f79\u5272</th><th>\u6c0f\u540d</th><th>\u30e1\u30fc\u30eb</th><th>\u56de\u7b54</th><th>\u64cd\u4f5c</th></tr></thead><tbody id="a-voters-tbody"></tbody></table></div><div id="a-vote-msg" style="margin-top:12px"></div><div class="mt-4"><button class="btn btn-amber" onclick="sendVoteEmails()">\u51fa\u6b20\u78ba\u8a8d\u30e1\u30fc\u30eb\u3092\u9001\u4fe1\u3059\u308b</button></div></div>';
+  h+='<div id="tab-voting" class="tab-content"><div class="flex justify-between items-center flex-wrap gap-2" style="margin-bottom:14px"><span id="a-vote-stats" class="text-sm"></span><button class="btn btn-gray btn-sm" onclick="loadAdminData()">\u66f4\u65b0</button></div><div id="a-matrix-wrap" class="table-wrap"></div><hr class="divider"><div class="section-title">\u53c2\u52a0\u8005\u4e00\u89a7</div><div class="table-wrap"><table><thead><tr><th>\u5f79\u5272</th><th>\u6c0f\u540d</th><th>\u30e1\u30fc\u30eb</th><th>\u56de\u7b54</th><th>\u64cd\u4f5c</th></tr></thead><tbody id="a-voters-tbody"></tbody></table></div><hr class="divider"><div class="section-title">\u56de\u7b54\u671f\u9650</div><p class="text-sm text-muted" style="margin-bottom:8px">\u6295\u7968\u8005\u3078\u306e\u30e1\u30fc\u30eb\u306b\u8a18\u8f09\u3055\u308c\u307e\u3059\u3002\u65e5\u4ed8\u3092\u30af\u30ea\u30c3\u30af\u3059\u308b\u3068\u5373\u5ea7\u306b\u4fdd\u5b58\u3055\u308c\u307e\u3059\u3002</p><div class="deadline-cal-wrap"><div class="deadline-cal-display"><button type="button" class="btn btn-sm" onclick="deadlineCalPrevMonth()">\u2039</button><span id="deadline-cal-label" class="text-sm" style="margin:0 12px"></span><button type="button" class="btn btn-sm" onclick="deadlineCalNextMonth()">\u203a</button></div><table class="deadline-cal-table" id="deadline-cal-table"></table><p class="text-sm" id="deadline-cal-selected" style="margin-top:6px"></p></div><div id="a-vote-msg" style="margin-top:12px"></div><div class="mt-4"><button class="btn btn-amber" onclick="sendVoteEmails()">\u51fa\u6b20\u78ba\u8a8d\u30e1\u30fc\u30eb\u3092\u9001\u4fe1\u3059\u308b</button></div></div>';
   /* Confirm */
   h+='<div id="tab-confirm" class="tab-content"><div id="c-confirmed-block"></div><div class="info-box info-box-blue" style="margin-bottom:18px"><h3>\u65e5\u7a0b\u78ba\u5b9a</h3><p>\u78ba\u5b9a\u3059\u308b\u3068\u5168\u53c2\u52a0\u8005\u306b\u901a\u77e5\u30e1\u30fc\u30eb\u304c\u9001\u4fe1\u3055\u308c\u307e\u3059\u3002</p></div><div class="form-row"><label>\u78ba\u5b9a\u3059\u308b\u65e5\u7a0b</label><select id="c-date-sel"><option value="">\u9078\u629e\u3057\u3066\u304f\u3060\u3055\u3044</option></select></div><div class="form-row"><label>\u4f1a\u5834</label><input type="text" id="c-venue" placeholder="\u4f8b\uff1a\u4f1a\u8b70\u5ba4 2F"></div><div id="c-msg"></div><div class="mt-4"><button class="btn btn-success" onclick="confirmDate()">\u78ba\u5b9a\u3057\u3066\u5168\u54e1\u306b\u901a\u77e5\u3059\u308b</button></div><hr class="divider"><div class="section-title">\u30ea\u30bb\u30c3\u30c8</div><button class="btn btn-gray btn-sm" onclick="resetMeeting()">\u30b9\u30c6\u30fc\u30bf\u30b9\u3092\u30ea\u30bb\u30c3\u30c8</button></div>';
   el('a-tab-contents').innerHTML=h;
@@ -992,6 +1009,72 @@ function addPRow(tbody,name,email,role,isFixed,roleOpts){
   tbody.appendChild(tr);
 }
 function addParticipantRow(){addPRow(el('a-p-tbody'),'','','voter',false);}
+
+/* ===== 回答期限カレンダー（v6 / DOM操作で安全に構築） ===== */
+var gDeadlineCalYear=0,gDeadlineCalMonth=0;
+function initDeadlineCalendar(meetingMonth,currentValue){
+  var hidden=el('a-deadline');if(hidden&&currentValue)hidden.value=currentValue;
+  var now=new Date();
+  if(currentValue&&/^\d{4}-\d{1,2}-\d{1,2}$/.test(currentValue)){
+    var pp=currentValue.split('-');gDeadlineCalYear=parseInt(pp[0],10);gDeadlineCalMonth=parseInt(pp[1],10)-1;
+  }else if(meetingMonth&&/^\d{1,2}$/.test(String(meetingMonth))){
+    gDeadlineCalYear=now.getFullYear();gDeadlineCalMonth=parseInt(meetingMonth,10)-1;
+    if(gDeadlineCalMonth<now.getMonth())gDeadlineCalYear++;
+  }else{
+    gDeadlineCalYear=now.getFullYear();gDeadlineCalMonth=now.getMonth();
+  }
+  renderDeadlineCalendar();
+}
+function deadlineCalPrevMonth(){gDeadlineCalMonth--;if(gDeadlineCalMonth<0){gDeadlineCalMonth=11;gDeadlineCalYear--;}renderDeadlineCalendar();}
+function deadlineCalNextMonth(){gDeadlineCalMonth++;if(gDeadlineCalMonth>11){gDeadlineCalMonth=0;gDeadlineCalYear++;}renderDeadlineCalendar();}
+function renderDeadlineCalendar(){
+  var label=el('deadline-cal-label'),tbl=el('deadline-cal-table'),sel=el('deadline-cal-selected'),hidden=el('a-deadline');
+  if(!label||!tbl)return;
+  label.textContent=gDeadlineCalYear+'年'+(gDeadlineCalMonth+1)+'月';
+  while(tbl.firstChild)tbl.removeChild(tbl.firstChild);
+  var today=new Date();today.setHours(0,0,0,0);
+  var firstDay=new Date(gDeadlineCalYear,gDeadlineCalMonth,1);
+  var lastDay=new Date(gDeadlineCalYear,gDeadlineCalMonth+1,0);
+  var startWd=firstDay.getDay(),dim=lastDay.getDate();
+  var selected=hidden?hidden.value:'';
+  var thead=document.createElement('thead'),htr=document.createElement('tr');
+  ['日','月','火','水','木','金','土'].forEach(function(w){var th=document.createElement('th');th.textContent=w;htr.appendChild(th);});
+  thead.appendChild(htr);tbl.appendChild(thead);
+  var tbody=document.createElement('tbody'),row=document.createElement('tr');
+  for(var i=0;i<startWd;i++){var td=document.createElement('td');td.className='dc-empty';row.appendChild(td);}
+  for(var d=1;d<=dim;d++){
+    var cellDate=new Date(gDeadlineCalYear,gDeadlineCalMonth,d);
+    var iso=gDeadlineCalYear+'-'+('0'+(gDeadlineCalMonth+1)).slice(-2)+'-'+('0'+d).slice(-2);
+    var c=document.createElement('td');c.textContent=String(d);
+    if(cellDate<today){c.className='dc-past';}
+    else if(iso===selected){c.className='dc-selected';c.dataset.iso=iso;c.addEventListener('click',deadlineCellClick);}
+    else{c.dataset.iso=iso;c.addEventListener('click',deadlineCellClick);}
+    row.appendChild(c);
+    if((startWd+d)%7===0&&d<dim){tbody.appendChild(row);row=document.createElement('tr');}
+  }
+  tbody.appendChild(row);tbl.appendChild(tbody);
+  if(sel)sel.textContent=selected?'選択中：'+selected:'未選択';
+}
+function deadlineCellClick(ev){
+  var iso=ev.currentTarget&&ev.currentTarget.dataset?ev.currentTarget.dataset.iso:'';
+  if(iso)selectDeadlineDate(iso);
+}
+function selectDeadlineDate(iso){
+  var hidden=el('a-deadline');if(hidden)hidden.value=iso;
+  renderDeadlineCalendar();
+  if(!gAdminData||!gAdminData.cfg){return;}
+  var cfg=gAdminData.cfg;
+  var msgEl=el('a-vote-msg');
+  if(msgEl){msgEl.textContent='期限を保存中...';msgEl.className='msg msg-info';}
+  google.script.run
+    .withSuccessHandler(function(r){
+      if(!msgEl)return;
+      if(r&&r.ok){msgEl.textContent='回答期限を保存しました：'+iso;msgEl.className='msg msg-info';if(gAdminData&&gAdminData.cfg)gAdminData.cfg.deadline=iso;}
+      else{msgEl.textContent='期限の保存に失敗しました。';msgEl.className='msg msg-error';}
+    })
+    .withFailureHandler(function(){if(msgEl){msgEl.textContent='通信エラー。';msgEl.className='msg msg-error';}})
+    .adminUpdateConfig(ADMIN_TOKEN,gCurrentMeetingId,cfg.title||'',iso,cfg.month||'');
+}
 
 /* ===== Save setup ===== */
 function saveSetup(){
