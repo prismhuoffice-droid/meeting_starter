@@ -839,6 +839,7 @@ function renderMeetingDetailContents(cur){
   updateDynamicSteps(vc,vn,cfg.month||'');setHtml('a-badge',statusBadge(cfg.status));
   renderStepGuide(cfg.status,vc,vn);
   var x;x=el('a-title');if(x)x.value=cfg.title||'';x=el('a-month');if(x)x.value=cfg.month||'';x=el('a-deadline');if(x)x.value=cfg.deadline||'';
+  x=el('a-email-prefix-note');if(x)x.value=cfg.email_prefix_note||'';
   initDeadlineCalendar(cfg.month||'',cfg.deadline||'');
   x=el('a-cal-start');if(x)x.value=cfg.cal_start||'';x=el('a-cal-end');if(x)x.value=cfg.cal_end||'';
   x=el('a-cal-sh');if(x)x.value=pad2(parseInt(cfg.cal_start_hour||13))+':00';x=el('a-cal-eh');if(x)x.value=pad2(parseInt(cfg.cal_end_hour||18))+':00';
@@ -863,6 +864,7 @@ function renderDynamicTabs(vc,vipParts){
   h+='<div id="tab-setup" class="tab-content active">';
   h+='<div class="form-row"><label>\u4f1a\u8b70\u540d</label><input type="text" id="a-title"></div>';
   h+='<div class="form-row"><label>\u958b\u50ac\u6708</label><input type="number" id="a-month" min="1" max="12" step="1" placeholder="\u4f8b\uff1a5" style="max-width:160px"><p class="text-sm text-muted" style="margin-top:4px">1\u301c12 \u306e\u6570\u5b57\u3092\u5165\u529b\u3002</p></div>';
+  h+='<div class="form-row"><label>\u30e1\u30fc\u30eb\u5192\u982d\u306e\u8a18\u8f09\u4e8b\u9805\uff08\u4efb\u610f\uff09</label><textarea id="a-email-prefix-note" rows="3" placeholder="\u4f8b\uff1a\u203b \u4eca\u56de\u3088\u308a\u4f1a\u8b70\u8abf\u6574\u30b7\u30b9\u30c6\u30e0 PRISM MeetSync \u3092\u4f7f\u7528\u3057\u3066\u3044\u307e\u3059\u3002\u3054\u4e0d\u660e\u306a\u70b9\u306f\u2026\u307e\u3067" style="width:100%;min-height:60px;resize:vertical"></textarea><p class="text-sm text-muted" style="margin-top:4px">\u3053\u306e\u4f1a\u8b70\u306e\u5168\u3066\u306e\u30e1\u30fc\u30eb\u672c\u6587\u306e\u5192\u982d\u306b\u633f\u5165\u3055\u308c\u307e\u3059\u3002\u7a7a\u6b04\u306e\u5834\u5408\u306f\u4f55\u3082\u51fa\u3055\u308c\u307e\u305b\u3093\u3002</p></div>';
   h+='<input type="hidden" id="a-deadline">';
   h+='<hr class="divider"><div class="section-title">\u53c2\u52a0\u8005\u30ea\u30b9\u30c8</div>';
   h+='<p class="text-sm text-muted" style="margin-bottom:10px">\u30b3\u30a2\u53c2\u52a0\u8005 = \u30ab\u30ec\u30f3\u30c0\u30fc\u3067\u7a7a\u304d\u6642\u9593\u3092\u5165\u529b\u3001\u6295\u7968\u8005 = \u51fa\u6b20\u56de\u7b54</p>';
@@ -1153,13 +1155,14 @@ function selectVipDeadlineDate(vipNum,iso){
 /* ===== Save setup ===== */
 function saveSetup(){
   var title=el('a-title').value.trim(),dl=el('a-deadline').value.trim(),month=el('a-month').value.trim();
+  var prefNote=(el('a-email-prefix-note')&&el('a-email-prefix-note').value)||'';
   if(month){var mn=parseInt(month,10);if(isNaN(mn)||mn<1||mn>12){setHtml('a-setup-msg','<div class="msg msg-error">\u958b\u50ac\u6708\u306f 1\u301c12 \u3067\u5165\u529b\u3057\u3066\u304f\u3060\u3055\u3044\u3002</div>');return;}month=String(mn);}
   var rows=el('a-p-tbody').querySelectorAll('tr'),list=[];
   rows.forEach(function(row){var n=row.querySelector('.p-name').value.trim(),e=row.querySelector('.p-email').value.trim(),r=row.querySelector('.p-role').value;if(n&&e)list.push({name:n,email:e,role:r});});
   if(!title){setHtml('a-setup-msg','<div class="msg msg-error">\u4f1a\u8b70\u540d\u3092\u5165\u529b\u3057\u3066\u304f\u3060\u3055\u3044\u3002</div>');return;}
   if(list.length===0){setHtml('a-setup-msg','<div class="msg msg-error">\u53c2\u52a0\u8005\u3092\u5165\u529b\u3057\u3066\u304f\u3060\u3055\u3044\u3002</div>');return;}
   setHtml('a-setup-msg','<div class="msg msg-info">\u4fdd\u5b58\u4e2d...</div>');
-  google.script.run.withSuccessHandler(function(r1){if(!r1.ok){setHtml('a-setup-msg','<div class="msg msg-error">\u8a2d\u5b9a\u306e\u4fdd\u5b58\u306b\u5931\u6557\u3057\u307e\u3057\u305f\u3002</div>');return;}google.script.run.withSuccessHandler(function(r2){if(r2.ok){var vc=gAdminData?parseInt(gAdminData.cfg.vip_count||'0',10):0;var nextL=vc>0?'調整期間を設定してください。':'候補確定タブに進んでください。';setHtml('a-setup-msg',buildStepGuideMsg_('保存しました（参加者 '+r2.count+' 名）。',nextL));loadAdminData();}else setHtml('a-setup-msg','<div class="msg msg-error">\u53c2\u52a0\u8005\u306e\u4fdd\u5b58\u306b\u5931\u6557\u3057\u307e\u3057\u305f\u3002</div>');}).withFailureHandler(function(){setHtml('a-setup-msg','<div class="msg msg-error">\u901a\u4fe1\u30a8\u30e9\u30fc\u3002</div>');}).adminSaveParticipants(ADMIN_TOKEN,gCurrentMeetingId,list);}).withFailureHandler(function(){setHtml('a-setup-msg','<div class="msg msg-error">\u901a\u4fe1\u30a8\u30e9\u30fc\u3002</div>');}).adminUpdateConfig(ADMIN_TOKEN,gCurrentMeetingId,title,dl,month);
+  google.script.run.withSuccessHandler(function(r1){if(!r1.ok){setHtml('a-setup-msg','<div class="msg msg-error">\u8a2d\u5b9a\u306e\u4fdd\u5b58\u306b\u5931\u6557\u3057\u307e\u3057\u305f\u3002</div>');return;}google.script.run.withSuccessHandler(function(r2){if(r2.ok){var vc=gAdminData?parseInt(gAdminData.cfg.vip_count||'0',10):0;var nextL=vc>0?'調整期間を設定してください。':'候補確定タブに進んでください。';setHtml('a-setup-msg',buildStepGuideMsg_('保存しました（参加者 '+r2.count+' 名）。',nextL));loadAdminData();}else setHtml('a-setup-msg','<div class="msg msg-error">\u53c2\u52a0\u8005\u306e\u4fdd\u5b58\u306b\u5931\u6557\u3057\u307e\u3057\u305f\u3002</div>');}).withFailureHandler(function(){setHtml('a-setup-msg','<div class="msg msg-error">\u901a\u4fe1\u30a8\u30e9\u30fc\u3002</div>');}).adminSaveParticipants(ADMIN_TOKEN,gCurrentMeetingId,list);}).withFailureHandler(function(){setHtml('a-setup-msg','<div class="msg msg-error">\u901a\u4fe1\u30a8\u30e9\u30fc\u3002</div>');}).adminUpdateConfig(ADMIN_TOKEN,gCurrentMeetingId,title,dl,month,prefNote);
 }
 function autoSetEndDate(){
   var s=el('a-cal-start');var e=el('a-cal-end');if(!s||!s.value)return;
