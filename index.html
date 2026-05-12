@@ -903,14 +903,20 @@ function buildVipTabHtml(vipNum,vipData,prevVipData,vipCount){
   h+='<div class="section-title">'+esc(vn)+' \u3078\u306e\u9001\u4fe1</div>';
   h+='<div class="text-sm" style="margin-bottom:8px;color:var(--gray)">\u6c0f\u540d\uff1a<span id="a-vip-name-'+vipNum+'">---</span>\u3000\u30e1\u30fc\u30eb\uff1a<span id="a-vip-email-'+vipNum+'">---</span></div>';
   h+='<p id="a-vip-status-'+vipNum+'" class="text-sm text-muted" style="margin-bottom:10px"></p>';
-  h+='<div class="flex gap-2 flex-wrap"><button class="btn btn-primary btn-sm" id="btn-send-vip-'+vipNum+'" onclick="sendProfLink(\''+role+'\')">URL\u3092\u9001\u4fe1</button><button class="btn btn-outline btn-sm" onclick="resendProf(\''+role+'\')">\u518d\u9001</button></div>';
+  /* VIP\u56de\u7b54\u671f\u9650\u30ab\u30ec\u30f3\u30c0\u30fc\uff08v6.1\uff09 */
+  h+='<input type="hidden" id="a-vip-deadline-'+vipNum+'">';
+  h+='<div class="section-title" style="margin-top:12px">'+esc(vn)+' \u306e\u56de\u7b54\u671f\u9650</div>';
+  h+='<p class="text-sm text-muted" style="margin-bottom:8px">\u3053\u306e\u65e5\u4ed8\u3092\u904e\u304e\u3066\u3082\u672a\u56de\u7b54\u306e\u5834\u5408\u3001\u5f53\u65e5\u671d9\u6642\u4ee5\u964d\u306b\u518d\u9001\u30e1\u30fc\u30eb\u304c\u81ea\u52d5\u9001\u4fe1\u3055\u308c\u307e\u3059\u3002\u30af\u30ea\u30c3\u30af\u3067\u5373\u4fdd\u5b58\u3002</p>';
+  h+='<div class="deadline-cal-wrap"><div class="deadline-cal-display"><button type="button" class="btn btn-sm" onclick="vipDeadlineCalPrev('+vipNum+')">\u2039</button><span id="vip-deadline-cal-label-'+vipNum+'" class="text-sm" style="margin:0 12px"></span><button type="button" class="btn btn-sm" onclick="vipDeadlineCalNext('+vipNum+')">\u203a</button></div><table class="deadline-cal-table" id="vip-deadline-cal-table-'+vipNum+'"></table><p class="text-sm" id="vip-deadline-cal-selected-'+vipNum+'" style="margin-top:6px"></p></div>';
+  h+='<div class="flex gap-2 flex-wrap" style="margin-top:12px"><button class="btn btn-primary btn-sm" id="btn-send-vip-'+vipNum+'" onclick="sendProfLink(\''+role+'\')">URL\u3092\u9001\u4fe1</button><button class="btn btn-outline btn-sm" onclick="resendProf(\''+role+'\')">\u518d\u9001</button></div>';
   h+='<div id="a-vip-url-'+vipNum+'" class="url-box" style="margin-top:10px;display:none"><span id="a-vip-url-text-'+vipNum+'" style="flex:1;font-size:.75rem;word-break:break-all"></span><button class="btn btn-outline btn-sm" onclick="copyEl(\'a-vip-url-text-'+vipNum+'\')">\u30b3\u30d4\u30fc</button></div>';
   h+='<div id="a-vip-preview-'+vipNum+'" style="margin-top:10px"></div><div id="a-vip-msg-'+vipNum+'" style="margin-top:10px"></div>';
   return h;
 }
 
 function renderVipTabs(data){
-  var vc=parseInt(data.cfg.vip_count||'0',10);var vs=data.vipSlots||{};
+  var vc=parseInt(data.cfg.vip_count||'0',10);var vs=data.vipSlots||{};var vd=data.vipDeadlines||{};
+  for(var iv=1;iv<=vc;iv++){initVipDeadlineCalendar(iv,data.cfg.month||'',vd['vip_'+iv]||'');}
   var slotTag=function(s,bg){return'<span style="display:inline-block;background:'+bg+';border-radius:4px;padding:2px 8px;font-size:.75rem;margin:2px">'+isoToJp(s)+'</span>';};
   for(var v=1;v<=vc;v++){
     var vp=data.vipParticipants.filter(function(p){return p.role==='vip_'+v;})[0];
@@ -1074,6 +1080,73 @@ function selectDeadlineDate(iso){
     })
     .withFailureHandler(function(){if(msgEl){msgEl.textContent='通信エラー。';msgEl.className='msg msg-error';}})
     .adminUpdateConfig(ADMIN_TOKEN,gCurrentMeetingId,cfg.title||'',iso,cfg.month||'');
+}
+
+/* ===== VIPごとの回答期限カレンダー（v6.1） ===== */
+var gVipDeadlineCalState={}; /* {vipNum: {year, month}} */
+function initVipDeadlineCalendar(vipNum,meetingMonth,currentValue){
+  var hidden=el('a-vip-deadline-'+vipNum);if(hidden)hidden.value=currentValue||'';
+  var now=new Date(),y,mo;
+  if(currentValue&&/^\d{4}-\d{1,2}-\d{1,2}$/.test(currentValue)){
+    var pp=currentValue.split('-');y=parseInt(pp[0],10);mo=parseInt(pp[1],10)-1;
+  }else if(meetingMonth&&/^\d{1,2}$/.test(String(meetingMonth))){
+    y=now.getFullYear();mo=parseInt(meetingMonth,10)-1;
+    if(mo<now.getMonth())y++;
+  }else{y=now.getFullYear();mo=now.getMonth();}
+  gVipDeadlineCalState[vipNum]={year:y,month:mo};
+  renderVipDeadlineCalendar(vipNum);
+}
+function vipDeadlineCalPrev(vipNum){var st=gVipDeadlineCalState[vipNum];if(!st)return;st.month--;if(st.month<0){st.month=11;st.year--;}renderVipDeadlineCalendar(vipNum);}
+function vipDeadlineCalNext(vipNum){var st=gVipDeadlineCalState[vipNum];if(!st)return;st.month++;if(st.month>11){st.month=0;st.year++;}renderVipDeadlineCalendar(vipNum);}
+function renderVipDeadlineCalendar(vipNum){
+  var st=gVipDeadlineCalState[vipNum];if(!st)return;
+  var label=el('vip-deadline-cal-label-'+vipNum),tbl=el('vip-deadline-cal-table-'+vipNum),sel=el('vip-deadline-cal-selected-'+vipNum),hidden=el('a-vip-deadline-'+vipNum);
+  if(!label||!tbl)return;
+  label.textContent=st.year+'年'+(st.month+1)+'月';
+  while(tbl.firstChild)tbl.removeChild(tbl.firstChild);
+  var today=new Date();today.setHours(0,0,0,0);
+  var firstDay=new Date(st.year,st.month,1),lastDay=new Date(st.year,st.month+1,0);
+  var startWd=firstDay.getDay(),dim=lastDay.getDate();
+  var selected=hidden?hidden.value:'';
+  var thead=document.createElement('thead'),htr=document.createElement('tr');
+  ['日','月','火','水','木','金','土'].forEach(function(w){var th=document.createElement('th');th.textContent=w;htr.appendChild(th);});
+  thead.appendChild(htr);tbl.appendChild(thead);
+  var tbody=document.createElement('tbody'),row=document.createElement('tr');
+  for(var i=0;i<startWd;i++){var td=document.createElement('td');td.className='dc-empty';row.appendChild(td);}
+  for(var d=1;d<=dim;d++){
+    var cellDate=new Date(st.year,st.month,d);
+    var iso=st.year+'-'+('0'+(st.month+1)).slice(-2)+'-'+('0'+d).slice(-2);
+    var c=document.createElement('td');c.textContent=String(d);
+    if(cellDate<today){c.className='dc-past';}
+    else{
+      if(iso===selected)c.className='dc-selected';
+      c.dataset.iso=iso;c.dataset.vipnum=String(vipNum);
+      c.addEventListener('click',vipDeadlineCellClick);
+    }
+    row.appendChild(c);
+    if((startWd+d)%7===0&&d<dim){tbody.appendChild(row);row=document.createElement('tr');}
+  }
+  tbody.appendChild(row);tbl.appendChild(tbody);
+  if(sel)sel.textContent=selected?'選択中：'+selected:'未選択';
+}
+function vipDeadlineCellClick(ev){
+  var t=ev.currentTarget;if(!t||!t.dataset)return;
+  var iso=t.dataset.iso,vipNum=parseInt(t.dataset.vipnum,10);
+  if(iso&&vipNum)selectVipDeadlineDate(vipNum,iso);
+}
+function selectVipDeadlineDate(vipNum,iso){
+  var hidden=el('a-vip-deadline-'+vipNum);if(hidden)hidden.value=iso;
+  renderVipDeadlineCalendar(vipNum);
+  var msgEl=el('a-vip-msg-'+vipNum);
+  if(msgEl){msgEl.textContent='期限を保存中...';msgEl.className='msg msg-info';}
+  google.script.run
+    .withSuccessHandler(function(r){
+      if(!msgEl)return;
+      if(r&&r.ok){msgEl.textContent='回答期限を保存しました：'+iso;msgEl.className='msg msg-info';if(gAdminData&&gAdminData.vipDeadlines)gAdminData.vipDeadlines['vip_'+vipNum]=iso;}
+      else{msgEl.textContent='期限の保存に失敗しました。';msgEl.className='msg msg-error';}
+    })
+    .withFailureHandler(function(){if(msgEl){msgEl.textContent='通信エラー。';msgEl.className='msg msg-error';}})
+    .adminSetVipDeadline(ADMIN_TOKEN,gCurrentMeetingId,vipNum,iso);
 }
 
 /* ===== Save setup ===== */
