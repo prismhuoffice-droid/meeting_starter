@@ -497,7 +497,7 @@ var gWizardStep        = 1;
 
 function buildDynamicStepLabels(vipCount, vipNames, month) {
   var labels = [(month ? month + '\u6708\u306e\u8abf\u6574\u958b\u59cb' : '\u8abf\u6574\u958b\u59cb')];
-  for (var i = 0; i < vipCount; i++) labels.push(honorific(vipNames[i] || 'VIP' + (i + 1)) + '\n\u8abf\u6574\u4e2d');
+  for (var i = 0; i < vipCount; i++) labels.push(honorific(vipNames[i] || 'コア参加者' + (i + 1)) + '\n\u8abf\u6574\u4e2d');
   labels.push('\u5019\u88dc\u78ba\u5b9a', '\u51fa\u6b20\u78ba\u8a8d', '\u65e5\u7a0b\u78ba\u5b9a', '\u5f53\u65e5');
   return labels;
 }
@@ -609,7 +609,8 @@ function renderStatus(data){
   if(data.emailGreeting)gGreeting=data.emailGreeting;
   if(data.mode==='list'){renderPublicList(data.meetings||[]);hide('v-status');show('v-status-list');return;}
   var vc=parseInt(data.vipCount||'0',10);
-  updateDynamicSteps(vc,[],data.meetingMonth||'');
+  var vipNamesFromInfo=(data.vipInfo||[]).map(function(v){return v.name||'';});
+  updateDynamicSteps(vc,vipNamesFromInfo,data.meetingMonth||'');
   setHtml('s-badge',statusBadge(data.status));
   setText('s-title',data.meetingTitle);
   setHtml('s-steps',renderSteps8(data.status));
@@ -853,7 +854,7 @@ function renderMeetingDetailContents(cur){
 /* ===== Dynamic admin tabs ===== */
 function renderDynamicTabs(vc,vipParts){
   var tabs=[{id:'setup',label:'\u6e96\u5099\u30fb\u8a2d\u5b9a'}];
-  for(var i=0;i<vc;i++){var vp=vipParts[i];tabs.push({id:'vip_'+(i+1),label:vp?honorific(vp.name):'VIP'+(i+1)});}
+  for(var i=0;i<vc;i++){var vp=vipParts[i];tabs.push({id:'vip_'+(i+1),label:vp?honorific(vp.name):'コア参加者'+(i+1)});}
   tabs.push({id:'candidates',label:'\u5019\u88dc\u78ba\u5b9a'},{id:'voting',label:'\u51fa\u6b20\u78ba\u8a8d'},{id:'confirm',label:'\u65e5\u7a0b\u78ba\u5b9a'});
   gDynamicTabNames=tabs.map(function(t){return t.id;});
   el('a-tabs').innerHTML=tabs.map(function(t,i){return'<button class="tab-btn'+(i===0?' active':'')+'" data-tab="'+t.id+'" onclick="showTab(\''+t.id+'\')">'+circled(i)+' '+esc(t.label)+'</button>';}).join('');
@@ -864,7 +865,7 @@ function renderDynamicTabs(vc,vipParts){
   h+='<div class="form-row"><label>\u958b\u50ac\u6708</label><input type="number" id="a-month" min="1" max="12" step="1" placeholder="\u4f8b\uff1a5" style="max-width:160px"><p class="text-sm text-muted" style="margin-top:4px">1\u301c12 \u306e\u6570\u5b57\u3092\u5165\u529b\u3002</p></div>';
   h+='<input type="hidden" id="a-deadline">';
   h+='<hr class="divider"><div class="section-title">\u53c2\u52a0\u8005\u30ea\u30b9\u30c8</div>';
-  h+='<p class="text-sm text-muted" style="margin-bottom:10px">VIP = \u30ab\u30ec\u30f3\u30c0\u30fc\u3067\u7a7a\u304d\u6642\u9593\u3092\u5165\u529b\u3001\u6295\u7968\u8005 = \u51fa\u6b20\u56de\u7b54</p>';
+  h+='<p class="text-sm text-muted" style="margin-bottom:10px">\u30b3\u30a2\u53c2\u52a0\u8005 = \u30ab\u30ec\u30f3\u30c0\u30fc\u3067\u7a7a\u304d\u6642\u9593\u3092\u5165\u529b\u3001\u6295\u7968\u8005 = \u51fa\u6b20\u56de\u7b54</p>';
   h+='<div class="table-wrap"><table class="p-table"><thead><tr><th style="width:120px">\u5f79\u5272</th><th>\u6c0f\u540d</th><th>\u30e1\u30fc\u30eb\u30a2\u30c9\u30ec\u30b9</th><th style="width:36px"></th></tr></thead><tbody id="a-p-tbody"></tbody></table></div>';
   h+='<button class="btn btn-outline btn-sm mt-4" onclick="addParticipantRow()">\uff0b \u53c2\u52a0\u8005\u3092\u8ffd\u52a0</button>';
   h+='<div id="a-setup-msg"></div><div class="mt-4"><button class="btn btn-primary" onclick="saveSetup()">\u8a2d\u5b9a\u3092\u4fdd\u5b58\u3059\u308b</button></div>';
@@ -875,9 +876,9 @@ function renderDynamicTabs(vc,vipParts){
   h+='<div id="a-date-specific-area" style="display:none"><div class="form-inline"><div class="form-row mb-0"><label>日付を追加</label><input type="date" id="a-specific-date"></div><button class="btn btn-outline btn-sm" onclick="addSpecificDate()" style="margin-top:18px">＋ 追加</button></div><div id="a-specific-list" style="margin:8px 0"></div></div>';
   /* 時間モード */
   h+='<hr class="divider">';
-  h+='<div class="form-row"><label>時間帯の扱い</label><div style="display:flex;gap:16px;margin-top:4px"><label style="font-weight:normal;cursor:pointer"><input type="radio" name="a-time-mode" value="selectable" checked onchange="toggleTimeMode()"> VIPが時間帯を選択する</label><label style="font-weight:normal;cursor:pointer"><input type="radio" name="a-time-mode" value="fixed" onchange="toggleTimeMode()"> 時間帯を固定する</label></div></div>';
+  h+='<div class="form-row"><label>時間帯の扱い</label><div style="display:flex;gap:16px;margin-top:4px"><label style="font-weight:normal;cursor:pointer"><input type="radio" name="a-time-mode" value="selectable" checked onchange="toggleTimeMode()"> コア参加者が時間帯を選択する</label><label style="font-weight:normal;cursor:pointer"><input type="radio" name="a-time-mode" value="fixed" onchange="toggleTimeMode()"> 時間帯を固定する</label></div></div>';
   h+='<div id="a-time-selectable-area"><div class="form-inline"><div class="form-row mb-0"><label>候補の開始時刻</label><input type="time" id="a-cal-sh" value="13:00" step="3600"></div><div class="form-row mb-0"><label>候補の終了時刻</label><input type="time" id="a-cal-eh" value="18:00" step="3600"></div></div></div>';
-  h+='<div id="a-time-fixed-area" style="display:none"><div class="form-inline"><div class="form-row mb-0"><label>開始時刻</label><input type="time" id="a-fixed-sh" value="17:00" step="900"></div><div class="form-row mb-0"><label>終了時刻</label><input type="time" id="a-fixed-eh" value="19:00" step="900"></div></div><p class="text-sm text-muted" style="margin-top:4px">VIPには日付のみ表示され、この時間帯が自動で設定されます。</p></div>';
+  h+='<div id="a-time-fixed-area" style="display:none"><div class="form-inline"><div class="form-row mb-0"><label>開始時刻</label><input type="time" id="a-fixed-sh" value="17:00" step="900"></div><div class="form-row mb-0"><label>終了時刻</label><input type="time" id="a-fixed-eh" value="19:00" step="900"></div></div><p class="text-sm text-muted" style="margin-top:4px">コア参加者には日付のみ表示され、この時間帯が自動で設定されます。</p></div>';
   /* 所要時間 */
   h+='<div class="form-row" style="margin-top:14px"><label>会議の所要時間</label><select id="a-duration" style="max-width:180px"><option value="30">30分</option><option value="45">45分</option><option value="60" selected>1時間</option><option value="75">1時間15分</option><option value="90">1時間30分</option><option value="105">1時間45分</option><option value="120">2時間</option><option value="150">2時間30分</option><option value="180">3時間</option></select></div>';
   h+='<div class="mt-4"><button class="btn btn-primary" onclick="savePeriod()">候補日・時間帯を保存する</button></div><div id="a-prof-msg" style="margin-top:8px"></div>';
@@ -886,7 +887,7 @@ function renderDynamicTabs(vc,vipParts){
   for(var v=1;v<=vc;v++){h+='<div id="tab-vip_'+v+'" class="tab-content">'+buildVipTabHtml(v,vipParts[v-1]||null,vipParts[v-2]||null,vc)+'</div>';}
   /* Candidates */
   var candBtn=vc===0?'<button class="btn btn-primary" onclick="setManualCandidates()">候補日時を確定する</button>':'<button class="btn btn-primary" onclick="setCandidates()">選択した日時を候補として確定する</button>';
-  var candDesc=vc===0?'候補日時を直接入力して投票者に打診できます。':'VIPが共通で選んだ時間帯から最終候補を選んでください。';
+  var candDesc=vc===0?'候補日時を直接入力して投票者に打診できます。':'コア参加者が共通で選んだ時間帯から最終候補を選んでください。';
   h+='<div id="tab-candidates" class="tab-content"><div class="info-box info-box-blue"><h3>候補の選択</h3><p>'+candDesc+'</p></div><div id="a-overlap-area" style="margin-top:16px"></div><div id="a-cand-msg"></div><div class="mt-4">'+candBtn+'</div></div>';
   /* Voting */
   h+='<div id="tab-voting" class="tab-content"><div class="flex justify-between items-center flex-wrap gap-2" style="margin-bottom:14px"><span id="a-vote-stats" class="text-sm"></span><button class="btn btn-gray btn-sm" onclick="loadAdminData()">\u66f4\u65b0</button></div><div id="a-matrix-wrap" class="table-wrap"></div><hr class="divider"><div class="section-title">\u53c2\u52a0\u8005\u4e00\u89a7</div><div class="table-wrap"><table><thead><tr><th>\u5f79\u5272</th><th>\u6c0f\u540d</th><th>\u30e1\u30fc\u30eb</th><th>\u56de\u7b54</th><th>\u64cd\u4f5c</th></tr></thead><tbody id="a-voters-tbody"></tbody></table></div><hr class="divider"><div class="section-title">\u56de\u7b54\u671f\u9650</div><p class="text-sm text-muted" style="margin-bottom:8px">\u6295\u7968\u8005\u3078\u306e\u30e1\u30fc\u30eb\u306b\u8a18\u8f09\u3055\u308c\u307e\u3059\u3002\u65e5\u4ed8\u3092\u30af\u30ea\u30c3\u30af\u3059\u308b\u3068\u5373\u5ea7\u306b\u4fdd\u5b58\u3055\u308c\u307e\u3059\u3002</p><div class="deadline-cal-wrap"><div class="deadline-cal-display"><button type="button" class="btn btn-sm" onclick="deadlineCalPrevMonth()">\u2039</button><span id="deadline-cal-label" class="text-sm" style="margin:0 12px"></span><button type="button" class="btn btn-sm" onclick="deadlineCalNextMonth()">\u203a</button></div><table class="deadline-cal-table" id="deadline-cal-table"></table><p class="text-sm" id="deadline-cal-selected" style="margin-top:6px"></p></div><div id="a-vote-msg" style="margin-top:12px"></div><div class="mt-4"><button class="btn btn-amber" onclick="sendVoteEmails()">\u51fa\u6b20\u78ba\u8a8d\u30e1\u30fc\u30eb\u3092\u9001\u4fe1\u3059\u308b</button></div></div>';
@@ -896,10 +897,10 @@ function renderDynamicTabs(vc,vipParts){
 }
 
 function buildVipTabHtml(vipNum,vipData,prevVipData,vipCount){
-  var vn=vipData?honorific(vipData.name):'VIP'+vipNum;var pn=prevVipData?honorific(prevVipData.name):'';var role='vip_'+vipNum;var h='';
+  var vn=vipData?honorific(vipData.name):'コア参加者'+vipNum;var pn=prevVipData?honorific(prevVipData.name):'';var role='vip_'+vipNum;var h='';
   h+='<div class="info-box info-box-blue" style="margin-bottom:16px"><h3>'+esc(vn)+' \u306e\u7a7a\u304d\u6642\u9593\u3092\u78ba\u8a8d</h3>';
   h+=(vipNum===1?'<p>\u8abf\u6574\u671f\u9593\u3092\u8a2d\u5b9a\u3057\u3066URL\u3092\u9001\u4fe1\u3059\u308b\u3068\u3001'+esc(vn)+' \u304c\u76f4\u63a5\u30ab\u30ec\u30f3\u30c0\u30fc\u306b\u5165\u529b\u3067\u304d\u307e\u3059\u3002</p>':'<p>'+(pn||'\u524d\u306e\u65b9')+' \u304c\u5165\u529b\u3092\u5b8c\u4e86\u3057\u3066\u304b\u3089\u9001\u4fe1\u3057\u3066\u304f\u3060\u3055\u3044\u3002</p>')+'</div>';
-  if(vipNum>1){h+='<div class="section-title" style="margin-top:0">'+(pn||'VIP'+(vipNum-1))+' \u306e\u5165\u529b\u7d50\u679c\uff08\u53c2\u7167\uff09</div><div id="a-vip-ref-status-'+vipNum+'" class="text-sm text-muted" style="margin-bottom:6px"></div><div id="a-vip-ref-preview-'+vipNum+'" style="margin-bottom:16px"></div><hr class="divider">';}
+  if(vipNum>1){h+='<div class="section-title" style="margin-top:0">'+(pn||'コア参加者'+(vipNum-1))+' \u306e\u5165\u529b\u7d50\u679c\uff08\u53c2\u7167\uff09</div><div id="a-vip-ref-status-'+vipNum+'" class="text-sm text-muted" style="margin-bottom:6px"></div><div id="a-vip-ref-preview-'+vipNum+'" style="margin-bottom:16px"></div><hr class="divider">';}
   h+='<div class="section-title">'+esc(vn)+' \u3078\u306e\u9001\u4fe1</div>';
   h+='<div class="text-sm" style="margin-bottom:8px;color:var(--gray)">\u6c0f\u540d\uff1a<span id="a-vip-name-'+vipNum+'">---</span>\u3000\u30e1\u30fc\u30eb\uff1a<span id="a-vip-email-'+vipNum+'">---</span></div>';
   h+='<p id="a-vip-status-'+vipNum+'" class="text-sm text-muted" style="margin-bottom:10px"></p>';
@@ -921,7 +922,7 @@ function renderVipTabs(data){
   for(var v=1;v<=vc;v++){
     var vp=data.vipParticipants.filter(function(p){return p.role==='vip_'+v;})[0];
     var slots=vs['vip_'+v]||[];
-    if(vp){setText('a-vip-name-'+v,honorific(vp.name));setText('a-vip-email-'+v,vp.email);var st=el('a-vip-status-'+v);if(st){if(vp.responded==='true'){var nextGuide='';if(v<vc){var nvn=data.vipParticipants.filter(function(p){return p.role==='vip_'+(v+1);})[0];nextGuide='→ 次のステップ：'+honorific(nvn?nvn.name:'VIP'+(v+1))+'のタブに進み、URLを送信してください。';}else{nextGuide='→ 次のステップ：候補確定タブで候補を選択してください。';}st.innerHTML='<span style="color:var(--green)">✓ 回答済み（'+slots.length+'枠 選択）</span><br><span style="font-weight:600;color:var(--blue);font-size:.82rem">'+esc(nextGuide)+'</span>';}else{st.textContent='未回答';}}var uw=el('a-vip-url-'+v);if(uw)uw.style.display='';setText('a-vip-url-text-'+v,vp.url);var pe=el('a-vip-preview-'+v);if(pe){pe.innerHTML=slots.length>0?slots.slice(0,6).map(function(s){return slotTag(s,'var(--green-lt)');}).join('')+(slots.length>6?'<span class="text-sm text-muted"> …他'+(slots.length-6)+'件</span>':''):'<span class="text-sm text-muted">まだ入力がありません</span>';}}
+    if(vp){setText('a-vip-name-'+v,honorific(vp.name));setText('a-vip-email-'+v,vp.email);var st=el('a-vip-status-'+v);if(st){if(vp.responded==='true'){var nextGuide='';if(v<vc){var nvn=data.vipParticipants.filter(function(p){return p.role==='vip_'+(v+1);})[0];nextGuide='→ 次のステップ：'+honorific(nvn?nvn.name:'コア参加者'+(v+1))+'のタブに進み、URLを送信してください。';}else{nextGuide='→ 次のステップ：候補確定タブで候補を選択してください。';}st.innerHTML='<span style="color:var(--green)">✓ 回答済み（'+slots.length+'枠 選択）</span><br><span style="font-weight:600;color:var(--blue);font-size:.82rem">'+esc(nextGuide)+'</span>';}else{st.textContent='未回答';}}var uw=el('a-vip-url-'+v);if(uw)uw.style.display='';setText('a-vip-url-text-'+v,vp.url);var pe=el('a-vip-preview-'+v);if(pe){pe.innerHTML=slots.length>0?slots.slice(0,6).map(function(s){return slotTag(s,'var(--green-lt)');}).join('')+(slots.length>6?'<span class="text-sm text-muted"> …他'+(slots.length-6)+'件</span>':''):'<span class="text-sm text-muted">まだ入力がありません</span>';}}
     if(v>1){var pvp=data.vipParticipants.filter(function(p){return p.role==='vip_'+(v-1);})[0];var ps=vs['vip_'+(v-1)]||[];var rs=el('a-vip-ref-status-'+v);var rp=el('a-vip-ref-preview-'+v);
       if(rs&&pvp){rs.textContent=pvp.responded==='true'?'\u2713 '+honorific(pvp.name)+' \u56de\u7b54\u6e08\u307f\uff08'+ps.length+'\u679a\uff09':'\u26a0 '+honorific(pvp.name)+' \u672a\u56de\u7b54';rs.style.color=pvp.responded==='true'?'var(--green)':'var(--amber)';}
       if(rp){rp.innerHTML=ps.length>0?ps.slice(0,6).map(function(s){return slotTag(s,'var(--green-lt)');}).join('')+(ps.length>6?'<span class="text-sm text-muted"> \u2026\u4ed6'+(ps.length-6)+'\u4ef6</span>':''):'<span class="text-sm text-muted">\uff08\u5165\u529b\u306a\u3057\uff09</span>';}
@@ -931,7 +932,7 @@ function renderVipTabs(data){
 
 function renderStepGuide(status,vipCount,vipNames){
   vipCount=vipCount||0;vipNames=vipNames||[];
-  var labels=['\u6e96\u5099'];for(var i=0;i<vipCount;i++)labels.push(honorific(vipNames[i]||'VIP'+(i+1)));
+  var labels=['\u6e96\u5099'];for(var i=0;i<vipCount;i++)labels.push(honorific(vipNames[i]||'コア参加者'+(i+1)));
   labels.push('\u5019\u88dc\u78ba\u5b9a','\u51fa\u6b20\u9001\u4fe1','\u65e5\u7a0b\u78ba\u5b9a','\u5f53\u65e5');
   var sm=buildDynamicStatusToStep(vipCount);var cur=sm[status]||0;
   el('a-step-guide').innerHTML=labels.map(function(l,i){var cls=i<cur?'done':i===cur?'active':'';return'<div class="sg-item '+cls+'"><div class="sg-num">'+(i<cur?'\u2713':(i+1))+'</div><div class="sg-label">'+esc(l)+'</div></div>';}).join('');
@@ -954,7 +955,7 @@ function createNewMeeting(){show('loading');google.script.run.withSuccessHandler
 function showTemplateSelectionDialog(templates){
   var ov=document.createElement('div');ov.className='tmpl-overlay';ov.id='tmpl-select-overlay';
   var h='<div class="tmpl-modal"><h2>\u30c6\u30f3\u30d7\u30ec\u30fc\u30c8\u3092\u9078\u629e</h2><p class="text-sm text-muted" style="margin-bottom:14px">\u4f1a\u8b70\u306e\u30d9\u30fc\u30b9\u3068\u306a\u308b\u30c6\u30f3\u30d7\u30ec\u30fc\u30c8\u3092\u9078\u3093\u3067\u304f\u3060\u3055\u3044\u3002</p><div class="template-list">';
-  templates.forEach(function(t){h+='<div class="template-card" style="cursor:pointer" onclick="selectTemplateForMeeting(\''+esc(t.id)+'\')"><div class="tc-name">'+esc(t.name)+'</div><div class="tc-meta">VIP: '+t.vip_count+'\u540d\u3000\u6295\u7968\u8005: '+(t.voter_list||[]).length+'\u540d</div></div>';});
+  templates.forEach(function(t){h+='<div class="template-card" style="cursor:pointer" onclick="selectTemplateForMeeting(\''+esc(t.id)+'\')"><div class="tc-name">'+esc(t.name)+'</div><div class="tc-meta">\u30b3\u30a2\u53c2\u52a0\u8005: '+t.vip_count+'\u540d\u3000\u6295\u7968\u8005: '+(t.voter_list||[]).length+'\u540d</div></div>';});
   h+='</div><div class="mt-4"><button class="btn btn-gray" onclick="closeOverlay(\'tmpl-select-overlay\')">\u30ad\u30e3\u30f3\u30bb\u30eb</button></div></div>';
   ov.innerHTML=h;document.body.appendChild(ov);window._tmpTemplates=templates;
 }
@@ -970,8 +971,8 @@ function showMeetingOverrideForm(tmpl){
   h+='<div class="form-row"><label>敬称</label><input type="text" id="mo-greeting" value="'+esc(tmpl.email_greeting||'先生')+'" style="max-width:200px"></div>';
   h+='<hr class="divider">';
   if(parseInt(tmpl.vip_count||'0',10)>0){
-    h+='<div class="section-title">VIP（'+esc(tmpl.vip_count)+'名）</div><table class="p-table"><thead><tr><th>順序</th><th>氏名</th><th>メール</th></tr></thead><tbody>';
-    for(var i=0;i<parseInt(tmpl.vip_count,10);i++){var vp=vips[i]||{};h+='<tr><td>VIP'+(i+1)+'</td><td><input type="text" class="mo-vip-name" value="'+esc(vp.name||'')+'"></td><td><input type="email" class="mo-vip-email" value="'+esc(vp.email||'')+'"></td></tr>';}
+    h+='<div class="section-title">コア参加者（'+esc(tmpl.vip_count)+'名）</div><table class="p-table"><thead><tr><th>順序</th><th>氏名</th><th>メール</th></tr></thead><tbody>';
+    for(var i=0;i<parseInt(tmpl.vip_count,10);i++){var vp=vips[i]||{};h+='<tr><td>コア参加者'+(i+1)+'</td><td><input type="text" class="mo-vip-name" value="'+esc(vp.name||'')+'"></td><td><input type="email" class="mo-vip-email" value="'+esc(vp.email||'')+'"></td></tr>';}
     h+='</tbody></table>';
   }
   h+='<div class="section-title">投票者</div><table class="p-table"><thead><tr><th>氏名</th><th>メール</th><th></th></tr></thead><tbody id="mo-voter-tbody">';
@@ -999,7 +1000,7 @@ function archiveMeeting(ev,id){if(ev)ev.stopPropagation();if(!confirm('\u3053\u3
 function unarchiveMeeting(ev,id){if(ev)ev.stopPropagation();google.script.run.withSuccessHandler(function(r){if(r&&r.ok)loadAdminData();else alert('\u5fa9\u5143\u306b\u5931\u6557\uff1a'+(r&&r.error||''));}).adminUnarchiveMeeting(ADMIN_TOKEN,id);}
 
 /* ===== Participants ===== */
-function buildRoleOptions(vc){var h='';for(var i=1;i<=vc;i++)h+='<option value="vip_'+i+'">VIP'+i+'</option>';h+='<option value="voter">\u6295\u7968\u8005</option>';return h;}
+function buildRoleOptions(vc){var h='';for(var i=1;i<=vc;i++)h+='<option value="vip_'+i+'">コア参加者'+i+'</option>';h+='<option value="voter">\u6295\u7968\u8005</option>';return h;}
 function renderParticipantsInput(parts,vc){
   var tb=el('a-p-tbody');if(!tb)return;tb.innerHTML='';var ro=buildRoleOptions(vc);
   for(var v=1;v<=vc;v++){var vp=parts.filter(function(p){return p.role==='vip_'+v;})[0]||{name:'',email:'',role:'vip_'+v};addPRow(tb,vp.name,vp.email,vp.role,true,ro);}
@@ -1209,7 +1210,7 @@ function savePeriod(){
   }).adminSetPeriod(ADMIN_TOKEN,gCurrentMeetingId,opts);
 }
 function buildStepGuideMsg_(done,next){return '<div class="msg msg-success" style="display:flex;flex-direction:column;gap:6px"><span>'+esc(done)+'</span><span style="font-weight:600;color:var(--blue)">→ 次のステップ：'+esc(next)+'</span></div>';}
-function getVipName_(n){if(!gAdminData)return 'VIP'+n;var vp=gAdminData.vipParticipants;return (vp&&vp[n-1])?honorific(vp[n-1].name):'VIP'+n;}
+function getVipName_(n){if(!gAdminData)return 'コア参加者'+n;var vp=gAdminData.vipParticipants;return (vp&&vp[n-1])?honorific(vp[n-1].name):'コア参加者'+n;}
 
 /* ===== VIP link sending ===== */
 function sendProfLink(role){var pts=gAdminData?gAdminData.participants:[];var p=pts.filter(function(x){return x.role===role;})[0];var ns=p?p.name+'\uff08'+p.email+'\uff09':role;if(!confirm('\u3010'+ns+'\u3011\u306bURL\u3092\u30e1\u30fc\u30eb\u9001\u4fe1\u3057\u307e\u3059\u304b\uff1f'))return;var vn=parseInt(role.replace('vip_',''),10);var mi='a-vip-msg-'+vn;setHtml(mi,'<div class="msg msg-info">\u9001\u4fe1\u4e2d...</div>');google.script.run.withSuccessHandler(function(r){if(r.ok){var vn2=parseInt(role.replace('vip_',''),10);var vc2=gAdminData?parseInt(gAdminData.cfg.vip_count||'0',10):0;var waitMsg=getVipName_(vn2)+'からの回答をお待ちください。回答が届くと通知ベル（🔔）でお知らせします。';setHtml(mi,buildStepGuideMsg_('URLを送信しました。',waitMsg));loadAdminData();}else setHtml(mi,'<div class="msg msg-error">\u9001\u4fe1\u5931\u6557\uff1a'+esc(r.message||r.error||'')+'</div>');}).withFailureHandler(function(){setHtml(mi,'<div class="msg msg-error">\u901a\u4fe1\u30a8\u30e9\u30fc\u3002</div>');}).adminSendProfessorLink(ADMIN_TOKEN,gCurrentMeetingId,role);}
@@ -1220,9 +1221,9 @@ function renderOverlapArea(data){
   var ov=data.overlap||[];var vc=parseInt(data.cfg.vip_count||'0',10);var vs=data.vipSlots||{};
   if(vc===0){el('a-overlap-area').innerHTML=buildManualCandidateForm_();return;}
   var allR=true;for(var i=1;i<=vc;i++){if(!(vs['vip_'+i]||[]).length){allR=false;break;}}
-  if(!allR){el('a-overlap-area').innerHTML='<div class="info-box info-box-amber"><h3>\u307e\u3060\u5168VIP\u306e\u56de\u7b54\u304c\u63c3\u3063\u3066\u3044\u307e\u305b\u3093</h3><p>\u5168\u3066\u306eVIP\u304c\u56de\u7b54\u3057\u3066\u304b\u3089\u5019\u88dc\u3092\u9078\u3093\u3067\u304f\u3060\u3055\u3044\u3002</p></div>';return;}
+  if(!allR){el('a-overlap-area').innerHTML='<div class="info-box info-box-amber"><h3>\u307e\u3060\u5168\u30b3\u30a2\u53c2\u52a0\u8005\u306e\u56de\u7b54\u304c\u63c3\u3063\u3066\u3044\u307e\u305b\u3093</h3><p>\u5168\u3066\u306e\u30b3\u30a2\u53c2\u52a0\u8005\u304c\u56de\u7b54\u3057\u3066\u304b\u3089\u5019\u88dc\u3092\u9078\u3093\u3067\u304f\u3060\u3055\u3044\u3002</p></div>';return;}
   if(ov.length===0){el('a-overlap-area').innerHTML='<div class="info-box info-box-amber"><h3>\u5171\u901a\u306e\u7a7a\u304d\u6642\u9593\u304c\u3042\u308a\u307e\u305b\u3093</h3><p>\u671f\u9593\u3092\u5909\u66f4\u3059\u308b\u304b\u518d\u8abf\u6574\u3057\u3066\u304f\u3060\u3055\u3044\u3002</p></div>';return;}
-  var h='<p class="text-sm text-muted" style="margin-bottom:10px">VIP\u304c\u5171\u901a\u3067\u9078\u3093\u3060\u6642\u9593\u5e2f\uff08\u6700\u59272\u3064\u9078\u629e\uff09\uff1a</p><div class="overlap-list">';
+  var h='<p class="text-sm text-muted" style="margin-bottom:10px">\u30b3\u30a2\u53c2\u52a0\u8005\u304c\u5171\u901a\u3067\u9078\u3093\u3060\u6642\u9593\u5e2f\uff08\u6700\u59272\u3064\u9078\u629e\uff09\uff1a</p><div class="overlap-list">';
   ov.forEach(function(iso){h+='<label class="overlap-item"><input type="checkbox" class="overlap-chk" value="'+esc(iso)+'" onchange="syncOvStyle(this)"> '+isoToJp(iso)+'</label>';});
   el('a-overlap-area').innerHTML=h+'</div>';
 }
@@ -1232,7 +1233,7 @@ function setCandidates(){var ck=document.querySelectorAll('.overlap-chk:checked'
 /* ===== Manual candidate entry (VIP=0) ===== */
 var gManualCandidates=[];
 function buildManualCandidateForm_(){
-  return '<div class="info-box info-box-blue"><h3>候補日時を追加してください</h3><p>VIPなしの構成です。候補日時を直接入力して投票者に打診できます。</p></div>'+
+  return '<div class="info-box info-box-blue"><h3>候補日時を追加してください</h3><p>コア参加者なしの構成です。候補日時を直接入力して投票者に打診できます。</p></div>'+
     '<div class="form-inline" style="margin:14px 0"><div class="form-row mb-0"><label>日付</label><input type="date" id="mc-date"></div>'+
     '<div class="form-row mb-0"><label>開始時刻</label><select id="mc-hour">'+buildHourOptions_(9,18)+'</select></div>'+
     '<button class="btn btn-outline btn-sm" onclick="addManualCandidate()" style="margin-top:18px">＋ 追加</button></div>'+
@@ -1286,7 +1287,7 @@ function autoNavigateTab(status,vc){vc=vc||0;for(var i=1;i<=vc;i++){if(status===
 
 /* ===== Template management ===== */
 function loadTemplates(){google.script.run.withSuccessHandler(function(r){if(!r||!r.ok)return;gTemplates=r.templates||[];renderTemplateList();}).withFailureHandler(function(){}).adminGetTemplates(ADMIN_TOKEN);}
-function renderTemplateList(){var c=el('tmpl-list');if(!c)return;if(gTemplates.length===0){c.innerHTML='<div class="meeting-empty">\u30c6\u30f3\u30d7\u30ec\u30fc\u30c8\u304c\u307e\u3060\u3042\u308a\u307e\u305b\u3093\u3002</div>';return;}c.innerHTML=gTemplates.map(function(t){return'<div class="template-card"><div class="tc-name">'+esc(t.name)+'</div><div class="tc-meta">VIP: '+t.vip_count+'\u540d\u3000\u6295\u7968\u8005: '+(t.voter_list||[]).length+'\u540d</div><div class="tc-actions"><button class="btn btn-outline btn-sm" onclick="openTemplateEditor(\''+esc(t.id)+'\')">\u7de8\u96c6</button><button class="btn btn-gray btn-sm" onclick="duplicateTemplate(\''+esc(t.id)+'\')">\u8907\u88fd</button><button class="btn btn-sm" style="background:var(--red-lt);color:var(--red)" onclick="deleteTemplate(\''+esc(t.id)+'\')">\u524a\u9664</button></div></div>';}).join('');}
+function renderTemplateList(){var c=el('tmpl-list');if(!c)return;if(gTemplates.length===0){c.innerHTML='<div class="meeting-empty">\u30c6\u30f3\u30d7\u30ec\u30fc\u30c8\u304c\u307e\u3060\u3042\u308a\u307e\u305b\u3093\u3002</div>';return;}c.innerHTML=gTemplates.map(function(t){return'<div class="template-card"><div class="tc-name">'+esc(t.name)+'</div><div class="tc-meta">\u30b3\u30a2\u53c2\u52a0\u8005: '+t.vip_count+'\u540d\u3000\u6295\u7968\u8005: '+(t.voter_list||[]).length+'\u540d</div><div class="tc-actions"><button class="btn btn-outline btn-sm" onclick="openTemplateEditor(\''+esc(t.id)+'\')">\u7de8\u96c6</button><button class="btn btn-gray btn-sm" onclick="duplicateTemplate(\''+esc(t.id)+'\')">\u8907\u88fd</button><button class="btn btn-sm" style="background:var(--red-lt);color:var(--red)" onclick="deleteTemplate(\''+esc(t.id)+'\')">\u524a\u9664</button></div></div>';}).join('');}
 function openTemplateEditor(tid){
   var tmpl=tid?gTemplates.filter(function(t){return t.id===tid;})[0]:null;var isN=!tmpl;
   var ov=document.createElement('div');ov.className='tmpl-overlay';ov.id='tmpl-edit-overlay';
@@ -1300,8 +1301,8 @@ function openTemplateEditor(tid){
   gs.forEach(function(g){h+='<option value="'+g+'"'+(cg===g?' selected':'')+'>'+g+'</option>';});h+='<option value="custom"'+(isCust?' selected':'')+'>\u30ab\u30b9\u30bf\u30e0</option></select>';
   h+='<input type="text" id="te-greeting-custom" placeholder="\u30ab\u30b9\u30bf\u30e0\u656c\u79f0" value="'+(isCust?esc(cg):'')+'" style="margin-top:4px;display:'+(isCust?'block':'none')+'"></div>';
   h+='<div class="form-row"><label>\u30e1\u30fc\u30eb\u6328\u62f6\u6587</label><input type="text" id="te-orgline" value="'+esc(tmpl?tmpl.email_org_line:'\u304a\u4e16\u8a71\u306b\u306a\u3063\u3066\u304a\u308a\u307e\u3059\u3002')+'"></div>';
-  h+='<div class="form-row"><label>VIP\u4eba\u6570\uff080\u301c10\uff09</label><input type="number" id="te-vip-count" min="0" max="10" value="'+vc+'" onchange="updateVipRows()"></div>';
-  h+='<div id="te-vip-rows">';for(var i=0;i<vc;i++){var v=vl[i]||{};h+='<div class="form-inline" style="margin-bottom:8px"><div class="form-row mb-0"><label>VIP'+(i+1)+' \u6c0f\u540d</label><input type="text" class="te-vip-name" value="'+esc(v.name||'')+'"></div><div class="form-row mb-0"><label>\u30e1\u30fc\u30eb</label><input type="email" class="te-vip-email" value="'+esc(v.email||'')+'"></div></div>';}h+='</div>';
+  h+='<div class="form-row"><label>\u30b3\u30a2\u53c2\u52a0\u8005\u4eba\u6570\uff080\u301c10\uff09</label><input type="number" id="te-vip-count" min="0" max="10" value="'+vc+'" onchange="updateVipRows()"></div>';
+  h+='<div id="te-vip-rows">';for(var i=0;i<vc;i++){var v=vl[i]||{};h+='<div class="form-inline" style="margin-bottom:8px"><div class="form-row mb-0"><label>\u30b3\u30a2\u53c2\u52a0\u8005'+(i+1)+' \u6c0f\u540d</label><input type="text" class="te-vip-name" value="'+esc(v.name||'')+'"></div><div class="form-row mb-0"><label>\u30e1\u30fc\u30eb</label><input type="email" class="te-vip-email" value="'+esc(v.email||'')+'"></div></div>';}h+='</div>';
   h+='<div class="section-title">\u6295\u7968\u8005\u30ea\u30b9\u30c8</div><div id="te-voter-rows">';
   vrl.forEach(function(v){h+='<div class="form-inline" style="margin-bottom:6px"><div class="form-row mb-0"><input type="text" class="te-voter-name" placeholder="\u6c0f\u540d" value="'+esc(v.name||'')+'"></div><div class="form-row mb-0"><input type="email" class="te-voter-email" placeholder="\u30e1\u30fc\u30eb" value="'+esc(v.email||'')+'"></div><button class="btn btn-sm" style="background:var(--red-lt);color:var(--red);flex:0" onclick="this.parentElement.remove()">\u00d7</button></div>';});
   h+='</div><button class="btn btn-outline btn-sm" onclick="addVoterRow()" style="margin-top:6px">\uff0b \u6295\u7968\u8005\u3092\u8ffd\u52a0</button><hr class="divider">';
@@ -1310,7 +1311,7 @@ function openTemplateEditor(tid){
   ov.innerHTML=h;document.body.appendChild(ov);
   var sel=document.getElementById('te-greeting');if(sel)sel.addEventListener('change',function(){document.getElementById('te-greeting-custom').style.display=sel.value==='custom'?'block':'none';});
 }
-function updateVipRows(){var c=parseInt(document.getElementById('te-vip-count').value||'0',10);if(c<0)c=0;if(c>10)c=10;var ct=document.getElementById('te-vip-rows');var ex=[];ct.querySelectorAll('.te-vip-name').forEach(function(el,i){ex.push({name:el.value,email:ct.querySelectorAll('.te-vip-email')[i].value});});var h='';for(var i=0;i<c;i++){var v=ex[i]||{};h+='<div class="form-inline" style="margin-bottom:8px"><div class="form-row mb-0"><label>VIP'+(i+1)+' \u6c0f\u540d</label><input type="text" class="te-vip-name" value="'+esc(v.name||'')+'"></div><div class="form-row mb-0"><label>\u30e1\u30fc\u30eb</label><input type="email" class="te-vip-email" value="'+esc(v.email||'')+'"></div></div>';}ct.innerHTML=h;}
+function updateVipRows(){var c=parseInt(document.getElementById('te-vip-count').value||'0',10);if(c<0)c=0;if(c>10)c=10;var ct=document.getElementById('te-vip-rows');var ex=[];ct.querySelectorAll('.te-vip-name').forEach(function(el,i){ex.push({name:el.value,email:ct.querySelectorAll('.te-vip-email')[i].value});});var h='';for(var i=0;i<c;i++){var v=ex[i]||{};h+='<div class="form-inline" style="margin-bottom:8px"><div class="form-row mb-0"><label>\u30b3\u30a2\u53c2\u52a0\u8005'+(i+1)+' \u6c0f\u540d</label><input type="text" class="te-vip-name" value="'+esc(v.name||'')+'"></div><div class="form-row mb-0"><label>\u30e1\u30fc\u30eb</label><input type="email" class="te-vip-email" value="'+esc(v.email||'')+'"></div></div>';}ct.innerHTML=h;}
 function addVoterRow(){var c=document.getElementById('te-voter-rows');var d=document.createElement('div');d.className='form-inline';d.style.marginBottom='6px';d.innerHTML='<div class="form-row mb-0"><input type="text" class="te-voter-name" placeholder="\u6c0f\u540d"></div><div class="form-row mb-0"><input type="email" class="te-voter-email" placeholder="\u30e1\u30fc\u30eb"></div><button class="btn btn-sm" style="background:var(--red-lt);color:var(--red);flex:0" onclick="this.parentElement.remove()">\u00d7</button>';c.appendChild(d);}
 function saveTemplateFromEditor(tid){
   var name=document.getElementById('te-name').value.trim();if(!name){alert('\u30c6\u30f3\u30d7\u30ec\u30fc\u30c8\u540d\u3092\u5165\u529b\u3057\u3066\u304f\u3060\u3055\u3044\u3002');return;}
@@ -1337,8 +1338,8 @@ function showSetupWizard(){
   h+='<div class="wizard-step" id="wiz-step-2"><h3 style="font-size:.95rem;margin-bottom:12px">Step 2\uff1a\u30c6\u30f3\u30d7\u30ec\u30fc\u30c8\u4f5c\u6210</h3>';
   h+='<div class="form-row"><label>\u30c6\u30f3\u30d7\u30ec\u30fc\u30c8\u540d</label><input type="text" id="wiz-tmpl-name" placeholder="\u4f8b\uff1a\u5168\u4f53\u5b9a\u4f8b"></div>';
   h+='<div class="form-row"><label>\u30c7\u30d5\u30a9\u30eb\u30c8\u4f1a\u8b70\u540d</label><input type="text" id="wiz-tmpl-title" placeholder="\u4f8b\uff1a\u5b9a\u4f8b\u30df\u30fc\u30c6\u30a3\u30f3\u30b0"></div>';
-  h+='<div class="form-row"><label>VIP\u4eba\u6570\uff080\u301c10\uff09</label><input type="number" id="wiz-vip-count" min="0" max="10" value="2" onchange="updateWizardVipRows()"></div></div>';
-  h+='<div class="wizard-step" id="wiz-step-3"><h3 style="font-size:.95rem;margin-bottom:12px">Step 3\uff1aVIP\u8a73\u7d30</h3><div id="wiz-vip-detail-rows"></div></div>';
+  h+='<div class="form-row"><label>\u30b3\u30a2\u53c2\u52a0\u8005\u4eba\u6570\uff080\u301c10\uff09</label><input type="number" id="wiz-vip-count" min="0" max="10" value="2" onchange="updateWizardVipRows()"></div></div>';
+  h+='<div class="wizard-step" id="wiz-step-3"><h3 style="font-size:.95rem;margin-bottom:12px">Step 3\uff1a\u30b3\u30a2\u53c2\u52a0\u8005\u8a73\u7d30</h3><div id="wiz-vip-detail-rows"></div></div>';
   h+='<div class="wizard-step" id="wiz-step-4"><h3 style="font-size:.95rem;margin-bottom:12px">Step 4\uff1a\u6295\u7968\u8005\u30ea\u30b9\u30c8</h3><p class="text-sm text-muted" style="margin-bottom:10px">\u51fa\u6b20\u56de\u7b54\u3059\u308b\u53c2\u52a0\u8005\u3092\u767b\u9332\u3057\u3066\u304f\u3060\u3055\u3044\u3002</p><div id="wiz-voter-rows"></div><button class="btn btn-outline btn-sm" onclick="addWizVoterRow()" style="margin-top:8px">\uff0b \u6295\u7968\u8005\u3092\u8ffd\u52a0</button></div>';
   h+='<div class="wizard-step" id="wiz-step-5"><h3 style="font-size:.95rem;margin-bottom:12px">Step 5\uff1a\u78ba\u8a8d\u30fb\u4fdd\u5b58</h3><div class="form-inline" style="margin-bottom:14px"><div class="form-row mb-0"><label>\u958b\u59cb\u6642\u523b</label><input type="number" id="wiz-start-hour" min="0" max="23" value="13"></div><div class="form-row mb-0"><label>\u7d42\u4e86\u6642\u523b</label><input type="number" id="wiz-end-hour" min="0" max="23" value="18"></div></div><div id="wiz-preview" class="info-box info-box-blue" style="margin-bottom:14px"></div></div>';
   h+='<div class="wizard-nav"><button class="btn btn-gray" id="wiz-prev-btn" onclick="wizardPrev()" style="display:none">\u2190 \u623b\u308b</button><button class="btn btn-primary" id="wiz-next-btn" onclick="wizardNext()">\u6b21\u3078 \u2192</button></div></div>';
@@ -1346,12 +1347,12 @@ function showSetupWizard(){
   var gs=document.getElementById('wiz-greeting');if(gs)gs.addEventListener('change',function(){document.getElementById('wiz-greeting-custom').style.display=gs.value==='custom'?'block':'none';});
   updateWizardVipRows();addWizVoterRow();addWizVoterRow();addWizVoterRow();
 }
-function updateWizardVipRows(){var c=parseInt(document.getElementById('wiz-vip-count').value||'0',10);var ct=document.getElementById('wiz-vip-detail-rows');if(!ct)return;var h='';for(var i=0;i<c;i++){h+='<div class="form-inline" style="margin-bottom:8px"><div class="form-row mb-0"><label>VIP'+(i+1)+' \u6c0f\u540d</label><input type="text" class="wiz-vip-name" placeholder="\u6c0f\u540d"></div><div class="form-row mb-0"><label>\u30e1\u30fc\u30eb</label><input type="email" class="wiz-vip-email" placeholder="email"></div></div>';}if(c===0)h='<p class="text-sm text-muted">VIP\u306a\u3057\u306e\u5834\u5408\u3001\u30b9\u30ad\u30c3\u30d7\u3055\u308c\u307e\u3059\u3002</p>';ct.innerHTML=h;}
+function updateWizardVipRows(){var c=parseInt(document.getElementById('wiz-vip-count').value||'0',10);var ct=document.getElementById('wiz-vip-detail-rows');if(!ct)return;var h='';for(var i=0;i<c;i++){h+='<div class="form-inline" style="margin-bottom:8px"><div class="form-row mb-0"><label>\u30b3\u30a2\u53c2\u52a0\u8005'+(i+1)+' \u6c0f\u540d</label><input type="text" class="wiz-vip-name" placeholder="\u6c0f\u540d"></div><div class="form-row mb-0"><label>\u30e1\u30fc\u30eb</label><input type="email" class="wiz-vip-email" placeholder="email"></div></div>';}if(c===0)h='<p class="text-sm text-muted">\u30b3\u30a2\u53c2\u52a0\u8005\u306a\u3057\u306e\u5834\u5408\u3001\u30b9\u30ad\u30c3\u30d7\u3055\u308c\u307e\u3059\u3002</p>';ct.innerHTML=h;}
 function addWizVoterRow(){var c=document.getElementById('wiz-voter-rows');var d=document.createElement('div');d.className='form-inline';d.style.marginBottom='6px';d.innerHTML='<div class="form-row mb-0"><input type="text" class="wiz-voter-name" placeholder="\u6c0f\u540d"></div><div class="form-row mb-0"><input type="email" class="wiz-voter-email" placeholder="\u30e1\u30fc\u30eb"></div><button class="btn btn-sm" style="background:var(--red-lt);color:var(--red);flex:0" onclick="this.parentElement.remove()">\u00d7</button>';c.appendChild(d);}
 function wizardPrev(){if(gWizardStep<=1)return;document.getElementById('wiz-step-'+gWizardStep).classList.remove('active');gWizardStep--;document.getElementById('wiz-step-'+gWizardStep).classList.add('active');updateWizardNav();}
 function wizardNext(){if(gWizardStep>=5){submitWizard();return;}if(gWizardStep===1&&!document.getElementById('wiz-org-name').value.trim()){alert('\u7d44\u7e54\u540d\u3092\u5165\u529b\u3057\u3066\u304f\u3060\u3055\u3044\u3002');return;}if(gWizardStep===2){if(!document.getElementById('wiz-tmpl-name').value.trim()){alert('\u30c6\u30f3\u30d7\u30ec\u30fc\u30c8\u540d\u3092\u5165\u529b\u3057\u3066\u304f\u3060\u3055\u3044\u3002');return;}updateWizardVipRows();}if(gWizardStep===4)updateWizardPreview();document.getElementById('wiz-step-'+gWizardStep).classList.remove('active');gWizardStep++;document.getElementById('wiz-step-'+gWizardStep).classList.add('active');updateWizardNav();}
 function updateWizardNav(){document.getElementById('wiz-prev-btn').style.display=gWizardStep>1?'':'none';document.getElementById('wiz-next-btn').textContent=gWizardStep===5?'\u4fdd\u5b58\u3057\u3066\u5b8c\u4e86':'\u6b21\u3078 \u2192';for(var i=1;i<=5;i++){document.getElementById('wp-'+i).className='wp-dot'+(i<gWizardStep?' done':'')+(i===gWizardStep?' active':'');}}
-function updateWizardPreview(){var on=document.getElementById('wiz-org-name').value.trim();var tn=document.getElementById('wiz-tmpl-name').value.trim();var vc=parseInt(document.getElementById('wiz-vip-count').value||'0',10);var vns=[];document.querySelectorAll('.wiz-vip-name').forEach(function(el){vns.push(el.value.trim()||'(\u672a\u5165\u529b)');});var vrc=document.querySelectorAll('.wiz-voter-name').length;var p='<h3>\u8a2d\u5b9a\u30d7\u30ec\u30d3\u30e5\u30fc</h3><p>\u7d44\u7e54\u540d\uff1a'+esc(on)+'<br>\u30c6\u30f3\u30d7\u30ec\u30fc\u30c8\u540d\uff1a'+esc(tn)+'<br>VIP\u4eba\u6570\uff1a'+vc+'\u540d';if(vns.length>0)p+='\uff08'+vns.map(function(n){return esc(n);}).join('\u3001')+'\uff09';p+='<br>\u6295\u7968\u8005\uff1a'+vrc+'\u540d</p>';document.getElementById('wiz-preview').innerHTML=p;}
+function updateWizardPreview(){var on=document.getElementById('wiz-org-name').value.trim();var tn=document.getElementById('wiz-tmpl-name').value.trim();var vc=parseInt(document.getElementById('wiz-vip-count').value||'0',10);var vns=[];document.querySelectorAll('.wiz-vip-name').forEach(function(el){vns.push(el.value.trim()||'(\u672a\u5165\u529b)');});var vrc=document.querySelectorAll('.wiz-voter-name').length;var p='<h3>\u8a2d\u5b9a\u30d7\u30ec\u30d3\u30e5\u30fc</h3><p>\u7d44\u7e54\u540d\uff1a'+esc(on)+'<br>\u30c6\u30f3\u30d7\u30ec\u30fc\u30c8\u540d\uff1a'+esc(tn)+'<br>\u30b3\u30a2\u53c2\u52a0\u8005\u4eba\u6570\uff1a'+vc+'\u540d';if(vns.length>0)p+='\uff08'+vns.map(function(n){return esc(n);}).join('\u3001')+'\uff09';p+='<br>\u6295\u7968\u8005\uff1a'+vrc+'\u540d</p>';document.getElementById('wiz-preview').innerHTML=p;}
 function submitWizard(){
   var orgData={org_name:document.getElementById('wiz-org-name').value.trim(),email_greeting:document.getElementById('wiz-greeting').value==='custom'?document.getElementById('wiz-greeting-custom').value.trim():document.getElementById('wiz-greeting').value,email_org_line:document.getElementById('wiz-org-line').value.trim()};
   var vc=parseInt(document.getElementById('wiz-vip-count').value||'0',10);var vl=[];document.querySelectorAll('.wiz-vip-name').forEach(function(el,i){var em=document.querySelectorAll('.wiz-vip-email')[i];vl.push({order:i+1,name:el.value.trim(),email:em?em.value.trim():''});});
