@@ -18,6 +18,8 @@ header{background:var(--blue);color:#fff;padding:14px 24px}
 header.header-admin{background:#1b1b2f}
 header .logo{font-size:.65rem;letter-spacing:.1em;opacity:.7}
 header h1{font-size:1rem;font-weight:700;margin-top:2px}
+header a.header-home{display:block;color:inherit;text-decoration:none}
+header a.header-home:hover{opacity:.85}
 .container{max-width:820px;margin:0 auto;padding:24px 16px}
 .card{background:#fff;border-radius:var(--radius);border:1px solid var(--border);padding:24px 28px;margin-bottom:18px}
 @media(max-width:600px){.card{padding:18px 14px}}
@@ -258,8 +260,10 @@ hr.divider{border:none;border-top:1px solid var(--border);margin:18px 0}
 </head>
 <body>
 <header>
-  <div class="logo" id="header-org"></div>
-  <h1 id="header-title">MeetSync</h1>
+  <a id="header-home-link" class="header-home" href="#" title="ホーム（会議一覧）に戻る">
+    <div class="logo" id="header-org"></div>
+    <h1 id="header-title">MeetSync</h1>
+  </a>
 </header>
 <div class="container">
   <div id="loading"><div class="spinner"></div><p>読み込み中...</p></div>
@@ -514,8 +518,16 @@ function updateDynamicSteps(vipCount, vipNames, month) {
 }
 
 /* ===== Startup ===== */
+function setHomeLinkHref_() {
+  var a = el('header-home-link');
+  if (!a || !ORG_CODE) return;
+  var url = '?org=' + encodeURIComponent(ORG_CODE);
+  if (ADMIN_TOKEN) url += '&admin=' + encodeURIComponent(ADMIN_TOKEN);
+  a.setAttribute('href', url);
+}
 window.onload = function() {
   if (!ORG_CODE) { showError('URLに ?org=xxx パラメータが必要です'); return; }
+  setHomeLinkHref_();
   fetch('orgs.json').then(function(r) { return r.json(); }).then(function(orgs) {
     API_URL = orgs[ORG_CODE];
     if (!API_URL) { showError('\u6559\u5ba4\u30b3\u30fc\u30c9 "' + esc(ORG_CODE) + '" \u304c\u898b\u3064\u304b\u308a\u307e\u305b\u3093'); return; }
