@@ -467,13 +467,8 @@ function buildCurrentUrlWithoutSecret_(viewMode) {
   return window.location.pathname + (params.length ? '?' + params.join('&') : '');
 }
 
-/* 管理者トークンをURLバーから除去（ブラウザ履歴への漏洩防止） */
-if (RAW_ADMIN_TOKEN && window.history && window.history.replaceState) {
-  window.history.replaceState(null, '', buildCurrentUrlWithoutSecret_('admin'));
-}
-if (!RAW_ADMIN_TOKEN && ADMIN_TOKEN && VIEW_MODE !== 'admin' && window.history && window.history.replaceState) {
-  window.history.replaceState(null, '', buildCurrentUrlWithoutSecret_('admin'));
-}
+/* admin トークンは URL に残す（Slack 等で共有された URL から直接管理画面に入れるようにする）
+   トークン漏洩リスクは Basic 認証で別途カバーする方針 */
 
 var gGreeting          = '';  /* 敬称（先生/様/さん等） */
 var gAdminData         = null;
@@ -917,6 +912,7 @@ function buildVipTabHtml(vipNum,vipData,prevVipData,vipCount){
   if(vipNum>1){h+='<div class="section-title" style="margin-top:0">'+(pn||'コア参加者'+(vipNum-1))+' \u306e\u5165\u529b\u7d50\u679c\uff08\u53c2\u7167\uff09</div><div id="a-vip-ref-status-'+vipNum+'" class="text-sm text-muted" style="margin-bottom:6px"></div><div id="a-vip-ref-preview-'+vipNum+'" style="margin-bottom:16px"></div><hr class="divider">';}
   h+='<div class="section-title">'+esc(vn)+' \u3078\u306e\u9001\u4fe1</div>';
   h+='<div class="text-sm" style="margin-bottom:8px;color:var(--gray)">\u6c0f\u540d\uff1a<span id="a-vip-name-'+vipNum+'">---</span>\u3000\u30e1\u30fc\u30eb\uff1a<span id="a-vip-email-'+vipNum+'">---</span></div>';
+  h+='<p id="a-vip-sent-'+vipNum+'" class="text-sm" style="margin-bottom:6px;color:var(--gray)"></p>';
   h+='<p id="a-vip-status-'+vipNum+'" class="text-sm text-muted" style="margin-bottom:10px"></p>';
   /* VIP\u56de\u7b54\u671f\u9650\u30ab\u30ec\u30f3\u30c0\u30fc\uff08v6.1\uff09 */
   h+='<input type="hidden" id="a-vip-deadline-'+vipNum+'">';
@@ -930,8 +926,28 @@ function buildVipTabHtml(vipNum,vipData,prevVipData,vipCount){
 }
 
 function renderVipTabs(data){
-  var vc=parseInt(data.cfg.vip_count||'0',10);var vs=data.vipSlots||{};var vd=data.vipDeadlines||{};
+  var vc=parseInt(data.cfg.vip_count||'0',10);var vs=data.vipSlots||{};var vd=data.vipDeadlines||{};var sentMap=data.vipUrlSentAt||{};
   for(var iv=1;iv<=vc;iv++){initVipDeadlineCalendar(iv,data.cfg.month||'',vd['vip_'+iv]||'');}
+  for(var iv2=1;iv2<=vc;iv2++){
+    var sentIso=sentMap['vip_'+iv2]||'';
+    var elSent=el('a-vip-sent-'+iv2);
+    if(elSent){
+      if(sentIso){
+        var d=new Date(sentIso);
+        if(!isNaN(d.getTime())){
+          var lbl='📧 '+(d.getMonth()+1)+'月'+d.getDate()+'日 '+('0'+d.getHours()).slice(-2)+':'+('0'+d.getMinutes()).slice(-2)+' に送信済み';
+          elSent.textContent=lbl;
+          elSent.style.color='var(--green)';
+        }else{
+          elSent.textContent='📧 送信済み';
+          elSent.style.color='var(--green)';
+        }
+      }else{
+        elSent.textContent='未送信';
+        elSent.style.color='var(--gray)';
+      }
+    }
+  }
   var slotTag=function(s,bg){return'<span style="display:inline-block;background:'+bg+';border-radius:4px;padding:2px 8px;font-size:.75rem;margin:2px">'+isoToJp(s)+'</span>';};
   for(var v=1;v<=vc;v++){
     var vp=data.vipParticipants.filter(function(p){return p.role==='vip_'+v;})[0];
