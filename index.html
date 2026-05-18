@@ -848,6 +848,7 @@ function renderMeetingDetailContents(cur){
   renderStepGuide(cfg.status,vc,vn);
   var x;x=el('a-title');if(x)x.value=cfg.title||'';x=el('a-month');if(x)x.value=cfg.month||'';x=el('a-deadline');if(x)x.value=cfg.deadline||'';
   x=el('a-email-prefix-note');if(x)x.value=cfg.email_prefix_note||'';
+  x=el('a-notify-only');if(x)x.value=cfg.notify_only_recipients||'';
   initDeadlineCalendar(cfg.month||'',cfg.deadline||'');
   x=el('a-cal-start');if(x)x.value=cfg.cal_start||'';x=el('a-cal-end');if(x)x.value=cfg.cal_end||'';
   x=el('a-cal-sh');if(x)x.value=pad2(parseInt(cfg.cal_start_hour||13))+':00';x=el('a-cal-eh');if(x)x.value=pad2(parseInt(cfg.cal_end_hour||18))+':00';
@@ -873,6 +874,7 @@ function renderDynamicTabs(vc,vipParts){
   h+='<div class="form-row"><label>\u4f1a\u8b70\u540d</label><input type="text" id="a-title"></div>';
   h+='<div class="form-row"><label>\u958b\u50ac\u6708</label><input type="number" id="a-month" min="1" max="12" step="1" placeholder="\u4f8b\uff1a5" style="max-width:160px"><p class="text-sm text-muted" style="margin-top:4px">1\u301c12 \u306e\u6570\u5b57\u3092\u5165\u529b\u3002</p></div>';
   h+='<div class="form-row"><label>\u30e1\u30fc\u30eb\u5192\u982d\u306e\u8a18\u8f09\u4e8b\u9805\uff08\u4efb\u610f\uff09</label><textarea id="a-email-prefix-note" rows="3" placeholder="\u4f8b\uff1a\u203b \u4eca\u56de\u3088\u308a\u4f1a\u8b70\u8abf\u6574\u30b7\u30b9\u30c6\u30e0 PRISM MeetSync \u3092\u4f7f\u7528\u3057\u3066\u3044\u307e\u3059\u3002\u3054\u4e0d\u660e\u306a\u70b9\u306f\u2026\u307e\u3067" style="width:100%;min-height:60px;resize:vertical"></textarea><p class="text-sm text-muted" style="margin-top:4px">\u3053\u306e\u4f1a\u8b70\u306e\u5168\u3066\u306e\u30e1\u30fc\u30eb\u672c\u6587\u306e\u5192\u982d\u306b\u633f\u5165\u3055\u308c\u307e\u3059\u3002\u7a7a\u6b04\u306e\u5834\u5408\u306f\u4f55\u3082\u51fa\u3055\u308c\u307e\u305b\u3093\u3002</p></div>';
+  h+='<div class="form-row"><label>\u901a\u77e5\u5c02\u7528\u30a2\u30c9\u30ec\u30b9\uff08\u4efb\u610f\uff09</label><textarea id="a-notify-only" rows="3" placeholder="1\u884c1\u4ef6\u3001\u5f62\u5f0f\uff1a\u540d\u524d|email\u3000\u4f8b\uff1a\u7530\u4e2d\u592a\u90ce|tanaka@example.com" style="width:100%;min-height:60px;resize:vertical"></textarea><p class="text-sm text-muted" style="margin-top:4px">\u8abf\u6574\u306b\u306f\u5165\u3089\u305a\u3001\u300c\u65e5\u7a0b\u78ba\u5b9a\u901a\u77e5\u300d\u3068\u300c\u524d\u65e5\u30ea\u30de\u30a4\u30f3\u30c0\u30fc\u300d\u3060\u3051\u9001\u308b\u5b9b\u5148\u3002\u7a7a\u6b04\u306a\u3089\u9001\u4fe1\u3055\u308c\u307e\u305b\u3093\u3002</p></div>';
   h+='<input type="hidden" id="a-deadline">';
   h+='<hr class="divider"><div class="section-title">\u53c2\u52a0\u8005\u30ea\u30b9\u30c8</div>';
   h+='<p class="text-sm text-muted" style="margin-bottom:10px">\u30b3\u30a2\u53c2\u52a0\u8005 = \u30ab\u30ec\u30f3\u30c0\u30fc\u3067\u7a7a\u304d\u6642\u9593\u3092\u5165\u529b\u3001\u6295\u7968\u8005 = \u51fa\u6b20\u56de\u7b54</p>';
@@ -1009,6 +1011,7 @@ function showMeetingOverrideForm(tmpl){
   h+='<div class="section-title">投票者</div><table class="p-table"><thead><tr><th>氏名</th><th>メール</th><th></th></tr></thead><tbody id="mo-voter-tbody">';
   voters.forEach(function(v){h+='<tr><td><input type="text" class="mo-voter-name" value="'+esc(v.name||'')+'"></td><td><input type="email" class="mo-voter-email" value="'+esc(v.email||'')+'"></td><td><button class="btn btn-sm" style="background:var(--red-lt);color:var(--red)" onclick="this.closest(\'tr\').remove()">×</button></td></tr>';});
   h+='</tbody></table><button class="btn btn-outline btn-sm mt-4" onclick="addMoVoterRow()">＋ 投票者を追加</button>';
+  h+='<hr class="divider"><div class="form-row"><label>通知専用アドレス（任意）</label><textarea id="mo-notify-only" rows="3" placeholder="1行1件、形式：名前|email" style="width:100%;min-height:60px;resize:vertical">'+esc(tmpl.notify_only_recipients||'')+'</textarea><p class="text-sm text-muted" style="margin-top:4px">日程確定通知と前日リマインダーだけ送る宛先（調整には入りません）。</p></div>';
   h+='<div class="wizard-nav" style="margin-top:18px"><button class="btn btn-gray" onclick="closeOverlay(\'meeting-override-overlay\')">キャンセル</button><button class="btn btn-primary" onclick="doCreateMeeting(\''+esc(tmpl.id)+'\','+esc(tmpl.vip_count||'0')+')">作成</button></div></div>';
   ov.innerHTML=h;document.body.appendChild(ov);
 }
@@ -1018,7 +1021,9 @@ function doCreateMeeting(tid,vc){
   var month=(el('mo-month')||{}).value||'';month=month.trim();
   var greeting=(el('mo-greeting')||{}).value||'';greeting=greeting.trim();
   if(month){var mn=parseInt(month,10);if(isNaN(mn)||mn<1||mn>12){alert('開催月は 1〜12 で入力してください。');return;}month=String(mn);}
+  var notifyOnly=(el('mo-notify-only')||{}).value||'';
   var overrides={};if(title)overrides.title=title;if(month)overrides.month=month;if(greeting)overrides.email_greeting=greeting;
+  overrides.notify_only_recipients=notifyOnly;
   var vipNames=document.querySelectorAll('.mo-vip-name');var vipEmails=document.querySelectorAll('.mo-vip-email');
   if(vipNames.length>0){var vl=[];vipNames.forEach(function(n,i){var e=vipEmails[i];if(n.value.trim()&&e&&e.value.trim())vl.push({order:i+1,name:n.value.trim(),email:e.value.trim(),label:n.value.trim()});});if(vl.length>0)overrides.vip_list=vl;}
   var voterNames=document.querySelectorAll('.mo-voter-name');var voterEmails=document.querySelectorAll('.mo-voter-email');
@@ -1185,13 +1190,14 @@ function selectVipDeadlineDate(vipNum,iso){
 function saveSetup(){
   var title=el('a-title').value.trim(),dl=el('a-deadline').value.trim(),month=el('a-month').value.trim();
   var prefNote=(el('a-email-prefix-note')&&el('a-email-prefix-note').value)||'';
+  var notifyOnly=(el('a-notify-only')&&el('a-notify-only').value)||'';
   if(month){var mn=parseInt(month,10);if(isNaN(mn)||mn<1||mn>12){setHtml('a-setup-msg','<div class="msg msg-error">\u958b\u50ac\u6708\u306f 1\u301c12 \u3067\u5165\u529b\u3057\u3066\u304f\u3060\u3055\u3044\u3002</div>');return;}month=String(mn);}
   var rows=el('a-p-tbody').querySelectorAll('tr'),list=[];
   rows.forEach(function(row){var n=row.querySelector('.p-name').value.trim(),e=row.querySelector('.p-email').value.trim(),r=row.querySelector('.p-role').value;if(n&&e)list.push({name:n,email:e,role:r});});
   if(!title){setHtml('a-setup-msg','<div class="msg msg-error">\u4f1a\u8b70\u540d\u3092\u5165\u529b\u3057\u3066\u304f\u3060\u3055\u3044\u3002</div>');return;}
   if(list.length===0){setHtml('a-setup-msg','<div class="msg msg-error">\u53c2\u52a0\u8005\u3092\u5165\u529b\u3057\u3066\u304f\u3060\u3055\u3044\u3002</div>');return;}
   setHtml('a-setup-msg','<div class="msg msg-info">\u4fdd\u5b58\u4e2d...</div>');
-  google.script.run.withSuccessHandler(function(r1){if(!r1.ok){setHtml('a-setup-msg','<div class="msg msg-error">\u8a2d\u5b9a\u306e\u4fdd\u5b58\u306b\u5931\u6557\u3057\u307e\u3057\u305f\u3002</div>');return;}google.script.run.withSuccessHandler(function(r2){if(r2.ok){var vc=gAdminData?parseInt(gAdminData.cfg.vip_count||'0',10):0;var nextL=vc>0?'調整期間を設定してください。':'候補確定タブに進んでください。';setHtml('a-setup-msg',buildStepGuideMsg_('保存しました（参加者 '+r2.count+' 名）。',nextL));loadAdminData();}else setHtml('a-setup-msg','<div class="msg msg-error">\u53c2\u52a0\u8005\u306e\u4fdd\u5b58\u306b\u5931\u6557\u3057\u307e\u3057\u305f\u3002</div>');}).withFailureHandler(function(){setHtml('a-setup-msg','<div class="msg msg-error">\u901a\u4fe1\u30a8\u30e9\u30fc\u3002</div>');}).adminSaveParticipants(ADMIN_TOKEN,gCurrentMeetingId,list);}).withFailureHandler(function(){setHtml('a-setup-msg','<div class="msg msg-error">\u901a\u4fe1\u30a8\u30e9\u30fc\u3002</div>');}).adminUpdateConfig(ADMIN_TOKEN,gCurrentMeetingId,title,dl,month,prefNote);
+  google.script.run.withSuccessHandler(function(r1){if(!r1.ok){setHtml('a-setup-msg','<div class="msg msg-error">\u8a2d\u5b9a\u306e\u4fdd\u5b58\u306b\u5931\u6557\u3057\u307e\u3057\u305f\u3002</div>');return;}google.script.run.withSuccessHandler(function(r2){if(r2.ok){var vc=gAdminData?parseInt(gAdminData.cfg.vip_count||'0',10):0;var nextL=vc>0?'調整期間を設定してください。':'候補確定タブに進んでください。';setHtml('a-setup-msg',buildStepGuideMsg_('保存しました（参加者 '+r2.count+' 名）。',nextL));loadAdminData();}else setHtml('a-setup-msg','<div class="msg msg-error">\u53c2\u52a0\u8005\u306e\u4fdd\u5b58\u306b\u5931\u6557\u3057\u307e\u3057\u305f\u3002</div>');}).withFailureHandler(function(){setHtml('a-setup-msg','<div class="msg msg-error">\u901a\u4fe1\u30a8\u30e9\u30fc\u3002</div>');}).adminSaveParticipants(ADMIN_TOKEN,gCurrentMeetingId,list);}).withFailureHandler(function(){setHtml('a-setup-msg','<div class="msg msg-error">\u901a\u4fe1\u30a8\u30e9\u30fc\u3002</div>');}).adminUpdateConfig(ADMIN_TOKEN,gCurrentMeetingId,title,dl,month,prefNote,notifyOnly);
 }
 function autoSetEndDate(){
   var s=el('a-cal-start');var e=el('a-cal-end');if(!s||!s.value)return;
@@ -1362,6 +1368,7 @@ function openTemplateEditor(tid){
   vrl.forEach(function(v){h+='<div class="form-inline" style="margin-bottom:6px"><div class="form-row mb-0"><input type="text" class="te-voter-name" placeholder="\u6c0f\u540d" value="'+esc(v.name||'')+'"></div><div class="form-row mb-0"><input type="email" class="te-voter-email" placeholder="\u30e1\u30fc\u30eb" value="'+esc(v.email||'')+'"></div><button class="btn btn-sm" style="background:var(--red-lt);color:var(--red);flex:0" onclick="this.parentElement.remove()">\u00d7</button></div>';});
   h+='</div><button class="btn btn-outline btn-sm" onclick="addVoterRow()" style="margin-top:6px">\uff0b \u6295\u7968\u8005\u3092\u8ffd\u52a0</button><hr class="divider">';
   h+='<div class="form-inline"><div class="form-row mb-0"><label>\u958b\u59cb\u6642\u523b</label><input type="number" id="te-start-hour" min="0" max="23" value="'+(tmpl?tmpl.default_start_hour:13)+'"></div><div class="form-row mb-0"><label>\u7d42\u4e86\u6642\u523b</label><input type="number" id="te-end-hour" min="0" max="23" value="'+(tmpl?tmpl.default_end_hour:18)+'"></div></div>';
+  h+='<hr class="divider"><div class="form-row"><label>\u901a\u77e5\u5c02\u7528\u30a2\u30c9\u30ec\u30b9\uff08\u4efb\u610f\uff09</label><textarea id="te-notify-only" rows="3" placeholder="1\u884c1\u4ef6\u3001\u5f62\u5f0f\uff1a\u540d\u524d|email\u3000\u4f8b\uff1a\u7530\u4e2d\u592a\u90ce|tanaka@example.com" style="width:100%;min-height:60px;resize:vertical">'+esc(tmpl?(tmpl.notify_only_recipients||''):'')+'</textarea><p class="text-sm text-muted" style="margin-top:4px">\u8abf\u6574\u306b\u306f\u53c2\u52a0\u305b\u305a\u3001\u300c\u65e5\u7a0b\u78ba\u5b9a\u901a\u77e5\u300d\u3068\u300c\u524d\u65e5\u30ea\u30de\u30a4\u30f3\u30c0\u30fc\u300d\u3060\u3051\u9001\u308b\u5b9b\u5148\u3002</p></div>';
   h+='<div class="wizard-nav"><button class="btn btn-gray" onclick="closeOverlay(\'tmpl-edit-overlay\')">\u30ad\u30e3\u30f3\u30bb\u30eb</button><button class="btn btn-primary" onclick="saveTemplateFromEditor(\''+(tid||'')+'\')">\u4fdd\u5b58</button></div></div>';
   ov.innerHTML=h;document.body.appendChild(ov);
   var sel=document.getElementById('te-greeting');if(sel)sel.addEventListener('change',function(){document.getElementById('te-greeting-custom').style.display=sel.value==='custom'?'block':'none';});
@@ -1374,7 +1381,8 @@ function saveTemplateFromEditor(tid){
   var vc=parseInt(document.getElementById('te-vip-count').value||'0',10);var vl=[];
   document.querySelectorAll('#te-vip-rows .te-vip-name').forEach(function(el,i){var em=document.querySelectorAll('#te-vip-rows .te-vip-email')[i];vl.push({order:i+1,name:el.value.trim(),email:em?em.value.trim():''});});
   var vrl=[];document.querySelectorAll('#te-voter-rows .te-voter-name').forEach(function(el,i){var em=document.querySelectorAll('#te-voter-rows .te-voter-email')[i];var n=el.value.trim(),e=em?em.value.trim():'';if(n&&e)vrl.push({name:n,email:e});});
-  var d={name:name,default_title:document.getElementById('te-title').value.trim(),org_name:document.getElementById('te-org').value.trim(),vip_count:vc,vip_list:vl,voter_list:vrl,email_greeting:greeting||'\u5148\u751f',email_org_line:document.getElementById('te-orgline').value.trim()||'\u304a\u4e16\u8a71\u306b\u306a\u3063\u3066\u304a\u308a\u307e\u3059\u3002',default_start_hour:parseInt(document.getElementById('te-start-hour').value||'13',10),default_end_hour:parseInt(document.getElementById('te-end-hour').value||'18',10)};
+  var notifyOnly=(document.getElementById('te-notify-only')||{}).value||'';
+  var d={name:name,default_title:document.getElementById('te-title').value.trim(),org_name:document.getElementById('te-org').value.trim(),vip_count:vc,vip_list:vl,voter_list:vrl,email_greeting:greeting||'\u5148\u751f',email_org_line:document.getElementById('te-orgline').value.trim()||'\u304a\u4e16\u8a71\u306b\u306a\u3063\u3066\u304a\u308a\u307e\u3059\u3002',default_start_hour:parseInt(document.getElementById('te-start-hour').value||'13',10),default_end_hour:parseInt(document.getElementById('te-end-hour').value||'18',10),notify_only_recipients:notifyOnly};
   if(tid)d.id=tid;
   google.script.run.withSuccessHandler(function(r){if(r&&r.ok){closeOverlay('tmpl-edit-overlay');loadTemplates();}else alert('\u4fdd\u5b58\u306b\u5931\u6557\uff1a'+(r&&r.error||''));}).withFailureHandler(function(err){alert('\u901a\u4fe1\u30a8\u30e9\u30fc\uff1a'+((err&&err.message)||err));}).adminSaveTemplate(ADMIN_TOKEN,d);
 }
