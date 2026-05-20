@@ -1,0 +1,214 @@
+<!--
+  PRISM MeetSync 案内ページ
+  WordPress の「固定ページ」→「新規追加」→ エディタを「カスタムHTML」モードにして貼り付け
+  ※ Google フォームの埋め込みURLは実際のフォームIDに差し替えてください
+-->
+
+<div style="max-width:800px; margin:0 auto; font-family:inherit; line-height:1.8; color:#333;">
+
+<h2 style="border-bottom:3px solid #1e4d8c; padding-bottom:8px; color:#1e4d8c;">PRISM MeetSync</h2>
+
+<p style="font-size:1.05em; color:#555; margin-bottom:24px;">
+教室・研究室の会議日程調整を、1つのURLで完結できる無料のWebツールです。<br>
+PRISM-HU が運用・提供しています。
+</p>
+
+<div style="background:#e8f0fb; border-left:4px solid #1e4d8c; border-radius:8px; padding:18px 22px; margin-bottom:24px;">
+<h3 style="margin:0 0 8px; font-size:1em; color:#1e4d8c;">基本機能</h3>
+<ul style="margin:0 0 16px; padding-left:20px;">
+<li>重要な先生方の都合を<strong>段階的に確認</strong>してから、全参加者に出欠を打診</li>
+<li>参加者はメールに届く専用URLを開くだけで、<strong>○（出席）／△（未定）／×（欠席）</strong> を選んで回答（アカウント登録不要）</li>
+<li>日程確定後の<strong>確定通知メール・前日リマインドメール</strong>を自動配信</li>
+<li>会議ごとの<strong>資料共有フォルダ</strong>（Google Drive）を自動作成（1ファイル 最大35MB）</li>
+<li>参加者の構成をテンプレートとして保存し、<strong>毎回の設定を大幅に省力化</strong></li>
+</ul>
+
+<h3 style="margin:0 0 8px; font-size:1em; color:#1e4d8c;">必要に応じて追加できるオプション機能</h3>
+<ul style="margin:0; padding-left:20px;">
+<li><strong>通知専用アドレス</strong> — 調整には入らず「日程確定通知」と「前日リマインダー」だけ受け取る相手（例: 名誉教授・関連部署の責任者など）を登録できます</li>
+<li><strong>資料アップロード案内</strong> — 確定通知メール・前日リマインダーメールに、参加者ごとの個人 URL を自動記載。受信した先生はそのURLからファイルをアップロードできます（欠席者の発表資料受け取りに便利）</li>
+<li><strong>Google Meet URL の自動配信</strong> — 前日リマインダーメールに会議のオンラインURLを自動掲載</li>
+<li><strong>Slack 通知</strong> — 日程確定時に指定チャンネルへ通知（不参加者・コメント一覧つき）。Slack を使っている教室向け</li>
+</ul>
+<p style="margin:10px 0 0; font-size:0.88em; color:#6b7280;">※ オプション機能は使わなければ表示されません。必要な機能だけ ON にできます。</p>
+</div>
+
+<h3 style="color:#1e4d8c; margin-top:32px;">画面イメージ</h3>
+
+<p>実際の画面例を抜粋してご紹介します。</p>
+
+<div style="display:grid; grid-template-columns:repeat(auto-fit, minmax(280px, 1fr)); gap:20px; margin:20px 0;">
+
+  <div style="border:1px solid #d1d5db; border-radius:8px; padding:14px; background:#fff;">
+    <p style="margin:0 0 8px; font-weight:bold; color:#1e4d8c; font-size:0.95em;">運営担当者の管理画面</p>
+    <img src="screenshots/01-meeting-list.png" alt="会議一覧の管理画面" style="width:100%; height:auto; border:1px solid #e5e7eb; border-radius:4px; display:block;" />
+    <p style="margin:8px 0 0; font-size:0.85em; color:#6b7280;">複数の会議を並行管理。状態が一目でわかります。</p>
+  </div>
+
+  <div style="border:1px solid #d1d5db; border-radius:8px; padding:14px; background:#fff;">
+    <p style="margin:0 0 8px; font-weight:bold; color:#1e4d8c; font-size:0.95em;">参加者の出欠回答画面</p>
+    <img src="screenshots/11-voter-form.png" alt="参加者の出欠回答画面" style="width:100%; height:auto; border:1px solid #e5e7eb; border-radius:4px; display:block;" />
+    <p style="margin:8px 0 0; font-size:0.85em; color:#6b7280;">○△× を選ぶだけ。アカウント登録不要。</p>
+  </div>
+
+  <div style="border:1px solid #d1d5db; border-radius:8px; padding:14px; background:#fff;">
+    <p style="margin:0 0 8px; font-weight:bold; color:#1e4d8c; font-size:0.95em;">回答状況の集計</p>
+    <img src="screenshots/12-voting-tab.png" alt="出欠確認タブ（集計表とコメント）" style="width:100%; height:auto; border:1px solid #e5e7eb; border-radius:4px; display:block;" />
+    <p style="margin:8px 0 0; font-size:0.85em; color:#6b7280;">誰が ○ で誰が × か、コメントも一覧で確認。</p>
+  </div>
+
+  <div style="border:1px solid #d1d5db; border-radius:8px; padding:14px; background:#fff;">
+    <p style="margin:0 0 8px; font-weight:bold; color:#1e4d8c; font-size:0.95em;">確定通知メール（自動送信）</p>
+    <img src="screenshots/14-confirm-email.png" alt="確定通知メール本文" style="width:100%; height:auto; border:1px solid #e5e7eb; border-radius:4px; display:block;" />
+    <p style="margin:8px 0 0; font-size:0.85em; color:#6b7280;">日程が確定すると、参加者全員に資料アップロードURL付きで自動送信。</p>
+  </div>
+
+</div>
+
+<h3 style="color:#1e4d8c; margin-top:32px;">利用の流れ</h3>
+
+<table style="width:100%; border-collapse:collapse; margin:16px 0;">
+<tr style="background:#f3f4f6;">
+<td style="padding:12px 16px; border:1px solid #d1d5db; font-weight:bold; width:40px; text-align:center; color:#1e4d8c;">1</td>
+<td style="padding:12px 16px; border:1px solid #d1d5db;"><strong>お申し込み</strong><br>下記フォームからお申し込みください。Google アカウントの作成代行も承ります。</td>
+</tr>
+<tr>
+<td style="padding:12px 16px; border:1px solid #d1d5db; font-weight:bold; text-align:center; color:#1e4d8c;">2</td>
+<td style="padding:12px 16px; border:1px solid #d1d5db;"><strong>セットアップ（システム管理者が実施）</strong><br>PRISM-HU のシステム管理者がシステムを構築し、運営担当者用のURLをお渡しします。</td>
+</tr>
+<tr style="background:#f3f4f6;">
+<td style="padding:12px 16px; border:1px solid #d1d5db; font-weight:bold; text-align:center; color:#1e4d8c;">3</td>
+<td style="padding:12px 16px; border:1px solid #d1d5db;"><strong>初期設定（運営担当者が実施）</strong><br>受け取ったURLにアクセスし、ウィザードに沿って組織名・参加者を登録します。</td>
+</tr>
+<tr>
+<td style="padding:12px 16px; border:1px solid #d1d5db; font-weight:bold; text-align:center; color:#1e4d8c;">4</td>
+<td style="padding:12px 16px; border:1px solid #d1d5db;"><strong>運用開始</strong><br>会議を作成し、参加者に打診メールを送信。回答集計・日程確定・リマインドまで自動で行われます。</td>
+</tr>
+</table>
+
+<h3 style="color:#1e4d8c; margin-top:32px;">対象</h3>
+<ul style="padding-left:20px;">
+<li>北海道大学の教室・研究室・プロジェクトチーム</li>
+<li>定期的な会議の日程調整に手間がかかっている方</li>
+<li>メールのやり取りを減らしたい運営担当者の方</li>
+</ul>
+
+<h3 style="color:#1e4d8c; margin-top:32px;">費用</h3>
+<p><strong>無料</strong>でご利用いただけます。Google アカウント（Gmail）の作成が必要です。</p>
+
+<h3 style="color:#1e4d8c; margin-top:32px;">よくある質問</h3>
+
+<details style="margin-bottom:12px; border:1px solid #d1d5db; border-radius:8px; padding:12px 16px;">
+<summary style="cursor:pointer; font-weight:bold; color:#1e4d8c;">参加者は Google アカウントが必要ですか？</summary>
+<p style="margin:8px 0 0;">いいえ。参加者はメールで届くURLをクリックするだけで回答できます。ログインは不要です。</p>
+</details>
+
+<details style="margin-bottom:12px; border:1px solid #d1d5db; border-radius:8px; padding:12px 16px;">
+<summary style="cursor:pointer; font-weight:bold; color:#1e4d8c;">1つの教室で複数の会議を並行して調整できますか？</summary>
+<p style="margin:8px 0 0;">はい。会議ごとに独立して管理でき、テンプレートを使って素早く新しい会議を作成できます。</p>
+</details>
+
+<details style="margin-bottom:12px; border:1px solid #d1d5db; border-radius:8px; padding:12px 16px;">
+<summary style="cursor:pointer; font-weight:bold; color:#1e4d8c;">参加者の人数に制限はありますか？</summary>
+<p style="margin:8px 0 0;">特に制限はありません。数名の少人数会議から、20名以上の大規模な会議まで対応できます。</p>
+</details>
+
+<details style="margin-bottom:12px; border:1px solid #d1d5db; border-radius:8px; padding:12px 16px;">
+<summary style="cursor:pointer; font-weight:bold; color:#1e4d8c;">途中で参加者を追加・削除できますか？</summary>
+<p style="margin:8px 0 0;">はい。調整中でも運営担当者が管理画面から自由にメンバーを変更できます。</p>
+</details>
+
+<details style="margin-bottom:12px; border:1px solid #d1d5db; border-radius:8px; padding:12px 16px;">
+<summary style="cursor:pointer; font-weight:bold; color:#1e4d8c;">データはどこに保存されますか？</summary>
+<p style="margin:8px 0 0;">お申し込み時に用意する Google アカウントの Google スプレッドシートに保存されます。他の教室からはアクセスできません。</p>
+</details>
+
+<details style="margin-bottom:12px; border:1px solid #d1d5db; border-radius:8px; padding:12px 16px;">
+<summary style="cursor:pointer; font-weight:bold; color:#1e4d8c;">「通知専用アドレス」とは何ですか？</summary>
+<p style="margin:8px 0 0;">日程調整（出欠回答）には参加しないが、決定した日程と前日リマインダーだけ受け取ってほしい相手のためのアドレス枠です。たとえば「名誉教授」「事務担当」「関連部署の責任者」など、調整プロセスからは外したいが結果は共有したい相手に使えます。会議ごとに設定できます。</p>
+</details>
+
+<details style="margin-bottom:12px; border:1px solid #d1d5db; border-radius:8px; padding:12px 16px;">
+<summary style="cursor:pointer; font-weight:bold; color:#1e4d8c;">Slack 通知は必須ですか？</summary>
+<p style="margin:8px 0 0;">いいえ。Slack を使っていない教室では設定不要で、Slack 関連の表示も影響しません。Slack を使う教室は、Incoming Webhook URL を1度だけ登録すれば、日程確定時に指定チャンネルへ自動投稿されます（不参加者・コメント一覧つき）。</p>
+</details>
+
+<details style="margin-bottom:12px; border:1px solid #d1d5db; border-radius:8px; padding:12px 16px;">
+<summary style="cursor:pointer; font-weight:bold; color:#1e4d8c;">資料のアップロードはどのように行いますか？</summary>
+<p style="margin:8px 0 0;">参加者には自分専用のURLがメールで届きます。そのURLを開くと、ファイル選択ボタンから直接アップロードできます（1ファイル最大35MB）。アップロードされた資料は会議ごとの Google Drive フォルダに自動整理され、運営担当者と参加者は共通ポータルから閲覧できます。当日欠席する先生に発表資料を事前にもらう、といった用途に便利です。</p>
+</details>
+
+<hr style="border:none; border-top:1px solid #d1d5db; margin:32px 0;">
+
+<h3 style="color:#1e4d8c;">操作マニュアル</h3>
+<p>MeetSync の詳しい使い方は、運営担当者マニュアルをご覧ください。初回セットアップの手順から、会議の作成・調整・確定まで、画面ごとに丁寧にご案内しています。</p>
+<p style="margin:12px 0;">
+<a href="manual-operator.html" style="display:inline-flex; align-items:center; gap:8px; padding:10px 20px; background:#1e4d8c; color:#fff; border-radius:8px; text-decoration:none; font-weight:600; font-size:0.95em;">運営担当者マニュアルを見る →</a>
+</p>
+<p style="font-size:0.85em; color:#6b7280;">※ ご利用開始後、いつでもこちらからご確認いただけます。</p>
+
+<hr style="border:none; border-top:1px solid #d1d5db; margin:32px 0;">
+
+<h3 style="color:#1e4d8c;" id="guidelines">ご利用にあたって</h3>
+
+<div style="background:#f9fafb; border:1px solid #d1d5db; border-radius:8px; padding:20px 24px; margin:16px 0; font-size:0.92em; line-height:1.9;">
+
+<p style="margin-bottom:12px;"><strong>1. サービスの提供</strong><br>
+PRISM MeetSync は、PRISM-HU が北海道大学の教室・研究室向けに無償で提供する会議日程調整ツールです。システムのセットアップおよび技術的なサポートは PRISM-HU のシステム管理者が行います。</p>
+
+<p style="margin-bottom:12px;"><strong>2. データの管理</strong><br>
+会議データ（参加者情報、回答、資料等）は、お申し込み時にご用意いただく Google アカウントの Google スプレッドシートおよび Google Drive 内に保存されます。データは各教室・研究室が独立して管理し、他の利用者からはアクセスできません。PRISM-HU のシステム管理者は、セットアップおよびトラブル対応時にのみアカウントにアクセスします。</p>
+
+<p style="margin-bottom:12px;"><strong>3. 運営担当者の責任</strong><br>
+運営担当者用URL（管理者URL）には会議の作成・確定・メール送信などの権限が含まれます。URLの管理は運営担当者の責任において行ってください。URLが第三者に漏洩した場合は、速やかに PRISM-HU までご連絡ください。</p>
+
+<p style="margin-bottom:12px;"><strong>4. 免責事項</strong><br>
+PRISM-HU は本サービスの安定的な運用に努めますが、Google サービスの障害・仕様変更等に起因する不具合について責任を負いかねます。重要な会議の日程確定後は、別途ご自身でも参加者への連絡手段を確保されることをお勧めします。</p>
+
+<p style="margin-bottom:12px;"><strong>5. 利用の停止</strong><br>
+ご利用が不要になった場合は、PRISM-HU までご連絡ください。システムの停止およびデータの削除を行います。Google アカウント自体の削除が必要な場合は、別途ご相談ください。</p>
+
+<p style="margin-bottom:0;"><strong>6. 変更について</strong><br>
+本ガイドラインは、サービスの改善に伴い変更されることがあります。変更時は本ページにて告知します。</p>
+
+</div>
+
+<p style="font-size:0.85em; color:#6b7280; margin-top:6px;">お申し込みをもって、上記の内容にご同意いただいたものとします。</p>
+
+<hr style="border:none; border-top:1px solid #d1d5db; margin:32px 0;">
+
+<h3 style="color:#1e4d8c;" id="apply">お申し込み</h3>
+<p>以下のフォームに必要事項をご記入ください。通常 <strong>3営業日以内</strong> にセットアップを完了し、運営担当者用URLをメールでお送りします。</p>
+
+<!-- ====================================================================
+  Google フォームの埋め込み
+  下記の GOOGLE_FORM_ID を実際のフォームIDに差し替えてください。
+  フォームIDの取得方法:
+    1. Google フォーム編集画面で「送信」をクリック
+    2. 「<>」（HTML埋め込み）タブを選択
+    3. iframeのURLから /e/XXXXX/viewform の XXXXX 部分がフォームID
+===================================================================== -->
+<div style="margin:20px 0;">
+<iframe
+  src="https://docs.google.com/forms/d/e/1qA5UdnqLkgKbGuYMQ8fXJuLhH4im1jE5UvRDzy0CQ4w/viewform?embedded=true"
+  width="100%"
+  height="1200"
+  frameborder="0"
+  marginheight="0"
+  marginwidth="0"
+  style="border:1px solid #d1d5db; border-radius:8px;">
+  読み込んでいます...
+</iframe>
+</div>
+
+<hr style="border:none; border-top:1px solid #d1d5db; margin:32px 0;">
+
+<h3 style="color:#1e4d8c;">お問い合わせ</h3>
+<p>ご不明な点やトラブルがありましたら、下記までお気軽にご連絡ください。</p>
+<p style="background:#f3f4f6; border-radius:8px; padding:14px 18px; font-size:0.95em;">
+<strong>PRISM-HU 事務局</strong><br>
+<a href="mailto:prism-hu-office@pop.med.hokudai.ac.jp" style="color:#1e4d8c;">prism-hu-office@pop.med.hokudai.ac.jp</a><br>
+<span style="font-size:0.85em; color:#6b7280;">件名に「MeetSync」と記載いただけるとスムーズです。</span>
+</p>
+
+</div>

@@ -1,0 +1,422 @@
+<!--
+  PRISM MeetSync 運営担当者マニュアル
+  WordPress の「固定ページ」→「新規追加」→ エディタを「カスタムHTML」モードにして貼り付け
+  最終更新: 2026-05-13（v6.x 対応版）
+-->
+
+<div style="max-width:800px; margin:0 auto; font-family:inherit; line-height:1.9; color:#333;">
+
+<h2 style="border-bottom:3px solid #1e4d8c; padding-bottom:8px; color:#1e4d8c;">PRISM MeetSync 運営担当者マニュアル</h2>
+
+<p style="font-size:0.85em; color:#6b7280;">最終更新: 2026-05-20（v6.x 対応版）</p>
+
+<div style="background:#f9fafb; border:1px solid #d1d5db; border-radius:8px; padding:18px 24px; margin:20px 0;">
+<p style="font-weight:bold; margin-bottom:8px;">目次</p>
+<ol style="margin:0; padding-left:20px; font-size:0.95em;">
+<li><a href="#ms-about" style="color:#1e4d8c;">PRISM MeetSync について</a></li>
+<li><a href="#ms-setup" style="color:#1e4d8c;">最初のセットアップ</a></li>
+<li><a href="#ms-template" style="color:#1e4d8c;">テンプレートについて</a></li>
+<li><a href="#ms-create" style="color:#1e4d8c;">会議を作成する</a></li>
+<li><a href="#ms-flow" style="color:#1e4d8c;">会議の調整を進める</a></li>
+<li><a href="#ms-tips" style="color:#1e4d8c;">便利な機能</a></li>
+<li><a href="#ms-options" style="color:#1e4d8c;">オプション機能（任意で使えます）</a></li>
+<li><a href="#ms-qa" style="color:#1e4d8c;">こんなときは（Q&amp;A）</a></li>
+</ol>
+</div>
+
+<h3 style="color:#1e4d8c; margin-top:36px;" id="ms-about">1. PRISM MeetSync について</h3>
+
+<h4 style="color:#333; margin-top:20px;">どんなツール？</h4>
+
+<p>PRISM MeetSync は、会議の日程調整をお手伝いするツールです。普段の日程調整では、候補日をメールで送り、返信を集め、表にまとめて…と、かなりの手間がかかります。MeetSync を使うと、この流れを画面上の操作だけで進められます。</p>
+
+<div style="background:#e8f0fb; border-left:4px solid #1e4d8c; border-radius:8px; padding:16px 20px; margin:16px 0;">
+<p style="font-weight:bold; margin-bottom:6px; color:#1e4d8c;">MeetSync がやってくれること</p>
+<ul style="margin:0; padding-left:20px;">
+<li>候補日時を参加者にメールで自動送信</li>
+<li>○△× の回答を画面上で集計</li>
+<li>日程が決まったら、全員に確定メールを自動送信</li>
+<li>前日のリマインドメールも自動配信</li>
+</ul>
+</div>
+
+<h4 style="color:#333; margin-top:24px;">登場人物（用語）</h4>
+
+<table style="width:100%; border-collapse:collapse; margin:12px 0;">
+<thead><tr style="background:#f3f4f6;"><th style="padding:10px 14px; border:1px solid #d1d5db; text-align:left; width:30%;">呼び方</th><th style="padding:10px 14px; border:1px solid #d1d5db; text-align:left;">意味</th></tr></thead>
+<tbody>
+<tr><td style="padding:10px 14px; border:1px solid #d1d5db;"><strong>コア参加者</strong></td><td style="padding:10px 14px; border:1px solid #d1d5db;">先にご都合を伺いたい中心メンバー（例: 主催の先生方）</td></tr>
+<tr style="background:#f9fafb;"><td style="padding:10px 14px; border:1px solid #d1d5db;"><strong>投票者</strong></td><td style="padding:10px 14px; border:1px solid #d1d5db;">出欠を回答していただく一般参加者</td></tr>
+<tr><td style="padding:10px 14px; border:1px solid #d1d5db;"><strong>共通ポータル</strong></td><td style="padding:10px 14px; border:1px solid #d1d5db;">関係者全員が進捗を閲覧できる公開ページ</td></tr>
+</tbody>
+</table>
+
+<p>「コア参加者」が0名でも問題ありません（全員一斉に出欠確認するパターン）。</p>
+
+<p><img src="screenshots/01-meeting-list.png" alt="運営担当者の管理画面：会議一覧と上部タブ" style="max-width:100%; border:1px solid #d1d5db; border-radius:8px; margin:12px 0;" /></p>
+
+<h3 style="color:#1e4d8c; margin-top:36px;" id="ms-setup">2. 最初のセットアップ</h3>
+
+<p>PRISM-HU 事務局から受け取った「運営担当者用URL」を開くと、初回のセットアップウィザードが立ち上がります。画面の案内に沿って、組織の情報・テンプレートを登録していきます。</p>
+
+<div style="background:#fef3c7; border-left:4px solid #f59e0b; border-radius:8px; padding:16px 20px; margin:16px 0;">
+<p style="font-weight:bold; margin-bottom:6px; color:#92400e;">運営担当者用URLについて</p>
+<p style="margin:0;">このURLは、運営の権限を持っているURLです。第三者に共有しないようご注意ください。万が一漏れてしまった場合は、PRISM-HU 事務局までご連絡ください。再発行いたします。</p>
+</div>
+
+<h4 style="color:#333; margin-top:24px;">ウィザードで設定する項目</h4>
+
+<p><strong>Step 1: 組織情報</strong> — 組織名、敬称、メール冒頭の文（お世話になっております等）</p>
+
+<p><strong>Step 2: テンプレート名</strong> — 例「定例ミーティング」など、会議の種類が分かる名前</p>
+
+<p><strong>Step 3: コア参加者の情報</strong></p>
+<ul>
+<li>氏名・メールアドレスを入力</li>
+<li>入力した順番にご都合を伺う（1番目が選んだ日時の中から2番目が絞り込む形）</li>
+<li>Step 2 で「0」と入力した場合はこの画面はスキップ</li>
+</ul>
+
+<p><strong>Step 4: 投票者リスト</strong> — 「＋ 追加」で増やす／「×」で削除</p>
+
+<p><strong>Step 5: 調整の時間帯</strong> — 開始時刻・終了時刻の初期値（例: 13:00〜18:00）</p>
+
+<p style="color:#6b7280; font-size:0.9em;">ここで登録した内容は、後からいつでも変更できます。</p>
+
+<h3 style="color:#1e4d8c; margin-top:36px;" id="ms-template">3. テンプレートについて</h3>
+
+<h4 style="color:#333; margin-top:20px;">テンプレートとは</h4>
+
+<p>「毎月の定例会議はいつも同じメンバーで調整している」――そんなときに便利なのがテンプレートです。参加者の構成パターンに名前をつけて保存しておくと、会議を作るたびに一から入力する手間が省けます。</p>
+
+<div style="background:#e8f0fb; border-left:4px solid #1e4d8c; border-radius:8px; padding:16px 20px; margin:16px 0;">
+<p style="font-weight:bold; margin-bottom:6px; color:#1e4d8c;">活用の例</p>
+<ul style="margin:0; padding-left:20px;">
+<li><strong>「全体定例」</strong> — コア参加者 2名 ＋ 投票者 12名</li>
+<li><strong>「少人数打合せ」</strong> — コア参加者 0名（全員一斉打診） ＋ 投票者 5名</li>
+<li><strong>「幹部会」</strong> — コア参加者 1名 ＋ 投票者 3名</li>
+</ul>
+</div>
+
+<h4 style="color:#333; margin-top:24px;">テンプレート管理画面の操作</h4>
+
+<p>画面上部の <strong>「テンプレート管理」</strong> タブを開くと、登録済みのテンプレートがカード形式で並んでいます。</p>
+
+<p><img src="screenshots/02-template-editor-top.png" alt="テンプレート編集画面（基本情報）" style="max-width:100%; border:1px solid #d1d5db; border-radius:8px; margin:12px 0;" /></p>
+
+<ul>
+<li><strong>新しく作る</strong>: 「＋ 新しいテンプレート」</li>
+<li><strong>編集</strong>: カードの「編集」ボタン</li>
+<li><strong>複製</strong>: 既存の内容をコピーした新しいテンプレートを作成</li>
+<li><strong>削除</strong>: 不要になったテンプレートを消去</li>
+</ul>
+
+<p style="color:#6b7280; font-size:0.9em;">テンプレートを変更・削除しても、そのテンプレートから既に作成した会議には影響ありません。</p>
+
+<h3 style="color:#1e4d8c; margin-top:36px;" id="ms-create">4. 会議を作成する</h3>
+
+<ol>
+<li><strong>「会議一覧」</strong> タブの <strong>「＋ 新しい会議の調整を開始する」</strong> を押す</li>
+<li>テンプレートが複数ある場合は、どれを使うか選択</li>
+<li>テンプレートの内容があらかじめ入った作成フォームが開く</li>
+<li>会議名・開催月・敬称・コア参加者・投票者を確認し、必要に応じて編集</li>
+<li><strong>「作成」</strong> を押す</li>
+</ol>
+
+<p><img src="screenshots/04-new-meeting-form.png" alt="新しい会議の作成（テンプレートから自動入力）" style="max-width:100%; border:1px solid #d1d5db; border-radius:8px; margin:12px 0;" /></p>
+
+<p style="color:#6b7280; font-size:0.9em;">ここでの変更は今回の会議だけに適用されます。テンプレート自体は変わりません。</p>
+
+<h3 style="color:#1e4d8c; margin-top:36px;" id="ms-flow">5. 会議の調整を進める</h3>
+
+<p>会議を作成すると、画面上部に7段階の進行ステップが表示されます。左から順番に進めていきます。</p>
+
+<div style="background:#f9fafb; border:1px solid #d1d5db; border-radius:8px; padding:16px 20px; margin:16px 0; font-family:monospace; white-space:pre; font-size:0.9em;">
+① 準備・設定
+  ↓
+② コア参加者A の調整
+  ↓
+③ コア参加者B の調整
+  ↓
+④ 候補確定
+  ↓
+⑤ 出欠確認
+  ↓
+⑥ 日程確定
+  ↓
+  前日リマインド（自動）→ ⑦ 当日
+</div>
+
+<p style="color:#6b7280; font-size:0.9em;">コア参加者がいない場合は ①→④→⑤→⑥ の流れになります。</p>
+
+<h4 style="color:#333; margin-top:24px;">① 準備・設定</h4>
+
+<p>会議名、開催月、参加者などを確認・編集するステップです。</p>
+
+<p><img src="screenshots/05-setup-tab.png" alt="準備・設定タブ（参加者リスト・各種オプション）" style="max-width:100%; border:1px solid #d1d5db; border-radius:8px; margin:12px 0;" /></p>
+
+<ul>
+<li>会議名や参加者を変更したい場合は、ここで編集して <strong>「設定を保存する」</strong> を押す</li>
+<li><strong>メール冒頭の記載事項（任意）</strong> に入力した文章は、この会議のすべてのメール本文の冒頭に挿入されます
+  <ul><li>例: 「今回より会議調整システム PRISM MeetSync を使用しています。ご不明な点は…」</li>
+      <li>空欄なら何も挿入されません</li></ul>
+</li>
+</ul>
+
+<h4 style="color:#333; margin-top:24px;">② コア参加者の調整</h4>
+
+<p>コア参加者ごとに専用のタブが表示されます。タブを開いて、調整期間・時間帯・回答期限を設定したうえで、URLを送信します。</p>
+
+<p><img src="screenshots/06-core-tab.png" alt="コア参加者タブ（URL送信・期限カレンダー）" style="max-width:100%; border:1px solid #d1d5db; border-radius:8px; margin:12px 0;" /></p>
+
+<p><strong>調整期間と時間帯</strong>:</p>
+<ul>
+<li>「期間で指定」 vs 「日付を個別に指定」を選ぶ</li>
+<li>「コア参加者が時間帯を選択する」 vs 「時間帯を固定する」を選ぶ</li>
+</ul>
+
+<p><strong>回答期限</strong>: コア参加者タブの月カレンダーで、回答してほしい日付をクリックします。<strong>期限の朝9時以降に未回答</strong>だった場合、自動で1回リマインドメールが送られます。</p>
+
+<p><strong>URLの送信</strong>: <strong>「URL を送信」</strong> ボタンを押すと、対象の方に専用URLのメールが届きます。</p>
+
+<p><img src="screenshots/07-core-email.png" alt="コア参加者に届くメール" style="max-width:100%; border:1px solid #d1d5db; border-radius:8px; margin:12px 0;" /></p>
+
+<p><img src="screenshots/08-core-calendar.png" alt="コア参加者のカレンダー入力画面（資料アップロード欄付き）" style="max-width:100%; border:1px solid #d1d5db; border-radius:8px; margin:12px 0;" /></p>
+
+<div style="background:#e8f0fb; border-left:4px solid #1e4d8c; border-radius:8px; padding:16px 20px; margin:16px 0;">
+<p style="font-weight:bold; margin-bottom:6px; color:#1e4d8c;">2番目以降の方について</p>
+<ul style="margin:0; padding-left:20px;">
+<li>1番目の方の回答が届いてから、次の方にメールを送ってください</li>
+<li>2番目の方には、1番目の方が「空いている」と答えた日時のみが表示されます</li>
+<li>期限設定とURL送信を、コア参加者の人数分繰り返します</li>
+<li>既に回答済みのコア参加者には、後発の方が回答した時点で「○○先生が回答しました」というお知らせメールが自動で届きます</li>
+</ul>
+</div>
+
+<div style="background:#fef3c7; border-left:4px solid #f59e0b; border-radius:8px; padding:16px 20px; margin:16px 0;">
+<p style="font-weight:bold; margin-bottom:6px; color:#92400e;">コア参加者から「都合が変わった」と連絡があったとき</p>
+<p style="margin:0 0 8px 0;">各コア参加者のタブに <strong>「この方からやり直す」</strong> ボタンがあります。クリックすると、そのコア参加者と以降のコア参加者の回答がクリアされ、調整ステータスがそのコア参加者の段階に戻ります。確認ダイアログで対象範囲を確認のうえ実行してください。やり直し後は改めて「URLを送信」してください。</p>
+<p style="margin:0; color:#6b7280; font-size:0.9em;">既に送信済みのメールは取り消せませんので、必要に応じて「再調整します」等のご連絡を別途行ってください。</p>
+</div>
+
+<h4 style="color:#333; margin-top:24px;">④ 候補確定</h4>
+
+<p>参加者全員に提示する候補日時を決めるステップです。</p>
+
+<ul>
+<li><strong>コア参加者がいる場合</strong>: 全員の回答が揃うと、共通で空いている日時が一覧表示されます。<strong>2つまで</strong>チェックを入れ、<strong>「選択した日時を候補として確定する」</strong> を押す</li>
+<li><strong>全員一斉に打診する場合</strong>: 日付と時刻を入力して候補を追加し、<strong>「候補日時を確定する」</strong> を押す</li>
+</ul>
+
+<p><img src="screenshots/10-candidates-tab.png" alt="候補確定タブ（コア参加者の共通空き時間から最大2つ選択）" style="max-width:100%; border:1px solid #d1d5db; border-radius:8px; margin:12px 0;" /></p>
+
+<p><strong>投票者の回答期限</strong>: 候補確定タブの下部にある月カレンダーで、投票者の回答期限を選択します。ここで選んだ日付が、出欠確認メールの本文中に「■ 回答期限：…」として記載されます。</p>
+
+<h4 style="color:#333; margin-top:24px;">⑤ 出欠確認</h4>
+
+<p>確定した候補日時について、投票者全員に出欠を確認するステップです。</p>
+
+<p><strong>「出欠確認メールを送信する」</strong> を押すと、投票者全員にメールが一斉送信されます。参加者はメールに記載されたURLを開き、○△× で回答します。未回答の方には <strong>「再送」</strong> ボタンで個別にリマインドメールを送信できます。</p>
+
+<p><img src="screenshots/11-voter-form.png" alt="投票者の出欠回答画面（コメント・資料アップロード欄付き）" style="max-width:100%; border:1px solid #d1d5db; border-radius:8px; margin:12px 0;" /></p>
+
+<p>運営担当者側では、集計表でどの日時に誰が○△×と答えたかが一覧できます。コメント欄に投稿があった場合は、表の下にまとめて表示されます。</p>
+
+<p><img src="screenshots/12-voting-tab.png" alt="出欠確認タブ（回答マトリックスとコメント一覧）" style="max-width:100%; border:1px solid #d1d5db; border-radius:8px; margin:12px 0;" /></p>
+
+<h4 style="color:#333; margin-top:24px;">⑥ 日程確定</h4>
+
+<ol>
+<li><strong>「確定する日程」</strong> から日時を選択</li>
+<li><strong>「会場」</strong> を入力（例: 100年記念館 2F 会議室）</li>
+<li><strong>「確定して全員に通知する」</strong> を押す</li>
+</ol>
+
+<p>全参加者に確定通知メールが自動送信されます。会議の<strong>前日</strong>には全参加者にリマインドメールが届き、<strong>当日</strong>にはポータル画面のステータスが「本日開催」に切り替わります。いずれも自動です。</p>
+
+<p><img src="screenshots/13-portal-confirmed.png" alt="日程確定後の共通ポータル画面" style="max-width:100%; border:1px solid #d1d5db; border-radius:8px; margin:12px 0;" /></p>
+
+<p><img src="screenshots/14-confirm-email.png" alt="確定通知メール本文（資料アップロードURL付き）" style="max-width:100%; border:1px solid #d1d5db; border-radius:8px; margin:12px 0;" /></p>
+
+<p style="color:#6b7280; font-size:0.9em;">資料アップロード機能・Slack 通知・通知専用アドレスを設定している場合は、ここで一緒に処理されます（詳しくは「7. オプション機能」を参照）。</p>
+
+<h3 style="color:#1e4d8c; margin-top:36px;" id="ms-tips">6. 便利な機能</h3>
+
+<h4 style="color:#333;">完了した会議をアーカイブする</h4>
+<p><strong>「🗄 アーカイブ」</strong> ボタンで一覧から非表示に。「アーカイブ済みを表示」で再表示、「復元」で元に戻せます。</p>
+
+<h4 style="color:#333; margin-top:18px;">次回の調整を素早く始める</h4>
+<p>⑥ の画面にある <strong>「ステータスをリセット」</strong> で、参加者リストはそのままに、回答データだけがクリアされます。</p>
+
+<h4 style="color:#333; margin-top:18px;">通知ベル 🔔</h4>
+<p>画面右上の 🔔 アイコンで、コア参加者の入力・投票者の回答・資料アップロードなどの最新の動きを確認できます。</p>
+
+<p><img src="screenshots/09-notification-bell.png" alt="通知ベルの表示例" style="max-width:100%; border:1px solid #d1d5db; border-radius:8px; margin:12px 0;" /></p>
+
+<h4 style="color:#333; margin-top:18px;">共通ポータル</h4>
+<p>各会議には「共通ポータルURL」が用意されています。関係者に共有すると、進捗を見てもらえます（閲覧専用）。メール本文にも自動で記載されます。</p>
+
+<h4 style="color:#333; margin-top:18px;">メール冒頭の注意書き</h4>
+<p>① 準備・設定の <strong>「メール冒頭の記載事項（任意）」</strong> に入力した文章が、その会議の全メールの冒頭に挿入されます。システム導入時の案内・会場変更・コロナ対策など、その回特有の連絡事項に活用できます。</p>
+
+<h3 style="color:#1e4d8c; margin-top:36px;" id="ms-options">7. オプション機能（任意で使えます）</h3>
+
+<p>会議のスタイルに合わせて、必要なものだけ有効化できます。<strong>使わなければ画面にも表示されません</strong>ので、関係ない機能が邪魔になることはありません。</p>
+
+<h4 style="color:#333; margin-top:24px;">A. 通知専用アドレス</h4>
+
+<p><strong>こんなときに使う</strong>: 日程調整（出欠回答）には参加しないけれど、決まった日程と前日のリマインドだけお知らせしたい方がいる場合。たとえば名誉教授や顧問の先生、関連部署の責任者、議事録担当の事務局など。</p>
+
+<p><strong>設定の場所</strong>: ① 準備・設定タブ → 「通知専用アドレス（任意）」欄（テンプレート編集画面にも同じ欄があり、新規会議に引き継がれます）</p>
+
+<p><strong>入力形式</strong>: 1行1件、<code>名前|メールアドレス</code> の形で書きます。</p>
+
+<div style="background:#f9fafb; border:1px solid #d1d5db; border-radius:8px; padding:12px 16px; margin:8px 0; font-family:monospace; white-space:pre; font-size:0.88em;">工藤太郎|kudo@example.com
+山田花子|yamada@example.com</div>
+
+<p><img src="screenshots/03-template-editor-options.png" alt="テンプレート編集画面の通知専用アドレス・Slack 通知本文欄" style="max-width:100%; border:1px solid #d1d5db; border-radius:8px; margin:12px 0;" /></p>
+
+<p><strong>動作</strong>:</p>
+<ul>
+<li>日程確定時の通知メールが届きます</li>
+<li>前日のリマインドメールが届きます</li>
+<li>出欠調整のメール（候補日打診・○△×回答依頼）は届きません</li>
+<li>会議の敬称設定（例: 「先生」）が自動で付きます</li>
+</ul>
+
+<p style="color:#6b7280; font-size:0.9em;">空欄なら何もしません。途中から追加することもできます。</p>
+
+<h4 style="color:#333; margin-top:24px;">B. 資料アップロード</h4>
+
+<p><strong>こんなときに使う</strong>: 当日欠席する方の発表資料を事前に集めたい場合や、参加者で資料を共有したい場合。</p>
+
+<p><strong>仕組み</strong>:</p>
+<ul>
+<li>各会議に Google Drive の専用フォルダが自動で作られます</li>
+<li>参加者には自分専用のURL（出欠回答画面）からファイルをアップロードしてもらいます（1ファイル最大 35MB）</li>
+<li>アップロードされた資料は、運営担当者の管理画面下部「事前資料」セクションで確認できます</li>
+</ul>
+
+<p><strong>メールへの自動掲載</strong>:</p>
+<ul>
+<li>日程確定通知メールと前日リマインダーメールに、参加者ごとの個人URLが自動で記載されます</li>
+<li>添付の案内文「なお、当日欠席される先生は、会議当日までに資料を下記URLからアップロードしてください」も自動で入ります</li>
+<li>通知専用アドレス宛のメールには、この案内は入りません（アップロード対象外のため）</li>
+</ul>
+
+<p style="color:#6b7280; font-size:0.9em;">不要であれば特に何もする必要はありません。参加者がアップロードしなければそのまま会議が進みます。</p>
+
+<h4 style="color:#333; margin-top:24px;">C. Google Meet URL の自動配信</h4>
+
+<p><strong>こんなときに使う</strong>: オンライン会議や、ハイブリッド開催のときに、Meet URL を前日リマインダーメールに自動で載せたい場合。</p>
+
+<p><strong>設定の場所</strong>: ① 準備・設定タブ → 「Google Meet URL（任意）」欄</p>
+
+<p>URLをそのまま貼り付けて「設定を保存する」を押すだけです。</p>
+
+<div style="background:#f9fafb; border:1px solid #d1d5db; border-radius:8px; padding:12px 16px; margin:8px 0; font-family:monospace; font-size:0.88em;">https://meet.google.com/xxx-xxxx-xxx</div>
+
+<p><strong>動作</strong>:</p>
+<ul>
+<li>前日リマインダーメール本文に「■ Google Meet：…」の行が追加されます</li>
+<li>全員（参加者・コア参加者・通知専用アドレス）に届きます</li>
+<li>空欄なら何も記載されません</li>
+</ul>
+
+<h4 style="color:#333; margin-top:24px;">D. Slack 通知</h4>
+
+<p><strong>こんなときに使う</strong>: 教室で Slack を使っていて、日程確定時に指定チャンネルへ自動で通知を流したい場合。</p>
+
+<p><strong>準備</strong>: Slack の「Incoming Webhook」というURLを取得し、システム設定に1度だけ登録します（取得方法は PRISM-HU 事務局までお問い合わせください）。</p>
+
+<p><strong>設定の場所</strong>:</p>
+<ol>
+<li><strong>システム設定タブ</strong> → 「Slack Incoming Webhook URL」を貼り付け → 「保存」→ 「テスト送信」で動作確認</li>
+<li><strong>テンプレート編集 または ① 準備・設定タブ</strong> → 「Slack 通知本文」欄に通知文を作成（「デフォルトを挿入」ボタンで雛形が入ります）</li>
+</ol>
+
+<p><strong>通知の内容例</strong>:</p>
+
+<div style="background:#f9fafb; border:1px solid #d1d5db; border-radius:8px; padding:12px 16px; margin:8px 0; font-family:monospace; white-space:pre-wrap; font-size:0.85em;">7月のPILOTSミーティングは 2026年7月15日（水）14:00 に決定しました
+場所：100年記念館 2F 会議室
+
+【不参加・条件付き・未回答】
+■ 不参加（×）
+- 田中太郎
+■ 未回答
+- 山田花子
+
+【コメント】
+- 田中太郎：海外出張のため欠席</div>
+
+<p><strong>動作</strong>:</p>
+<ul>
+<li>日程確定ボタンを押した時点で Slack に投稿されます</li>
+<li>Webhook URL または 本文テンプレートのどちらかが空なら、Slack 機能はオフ</li>
+<li>Slack を使わない教室では設定しなくて構いません</li>
+</ul>
+
+<h3 style="color:#1e4d8c; margin-top:36px;" id="ms-qa">8. こんなときは（Q&amp;A）</h3>
+
+<h4 style="color:#333;">基本的なこと</h4>
+
+<p><strong>Q: 参加者にも Google アカウントが必要ですか？</strong></p>
+<p>いいえ、必要ありません。メールに届くリンクを開くだけで回答できます。</p>
+
+<p><strong>Q: スマートフォンでも操作できますか？</strong></p>
+<p>はい。管理画面・参加者の回答画面ともにスマートフォンのブラウザで利用できます。</p>
+
+<p><strong>Q: 複数の会議を同時に調整できますか？</strong></p>
+<p>はい。会議一覧から切り替えて、それぞれ独立して進められます。</p>
+
+<h4 style="color:#333; margin-top:24px;">調整の進め方</h4>
+
+<p><strong>Q: コア参加者の順番を変えたい場合は？</strong></p>
+<p>① 準備・設定の画面で、対象の方の役割を入れ替えて保存してください。</p>
+
+<p><strong>Q: 調整の途中でメンバーを追加できますか？</strong></p>
+<p>はい。① 準備・設定でメンバーを追加して保存してください。既に送信済みの出欠確認メールは新メンバーには届かないので、⑤ 出欠確認で個別に「再送」してください。</p>
+
+<p><strong>Q: コア参加者の回答期限を過ぎても回答が来ません。</strong></p>
+<p>期限当日の朝9時以降に自動でリマインドメールが1回送信されます。それでも回答がない場合は、コア参加者タブの「再送」ボタンで追加のリマインドを送れます。</p>
+
+<p><strong>Q: 一度確定した日程を変更できますか？</strong></p>
+<p>⑥ の「ステータスをリセット」で調整をやり直せます。既に送信済みの確定通知メールは取り消せないので、変更がある旨を別途参加者にお伝えください。</p>
+
+<p><strong>Q: メールの冒頭に注意書きを入れたい。</strong></p>
+<p>① 準備・設定の「メール冒頭の記載事項（任意）」に入力して保存してください。その会議に関する全メールの本文冒頭に挿入されます。</p>
+
+<h4 style="color:#333; margin-top:24px;">困ったとき</h4>
+
+<p><strong>Q: 管理画面が開けません。</strong></p>
+<p>URLをもう一度ご確認ください。それでも解決しない場合は PRISM-HU 事務局までお問い合わせください。</p>
+
+<p><strong>Q: 参加者から「URLが開けない」と連絡がありました。</strong></p>
+<p>参加者の情報を編集した場合、以前のURLが無効になることがあります。⑤ から該当者に「再送」でメールを送り直してください。</p>
+
+<p><strong>Q: 管理用のURLが他の方に知られてしまったかもしれません。</strong></p>
+<p>PRISM-HU 事務局までご連絡ください。新しいURLを再発行いたします。</p>
+
+<h4 style="color:#333; margin-top:24px;">オプション機能について</h4>
+
+<p><strong>Q: 通知専用アドレスを後から追加できますか？</strong></p>
+<p>はい。調整が進行中の会議でも、① 準備・設定の「通知専用アドレス」欄に追加して「設定を保存する」を押せば反映されます。次の日程確定通知・前日リマインダーから新しい宛先にも届きます（既に確定済みの会議では、確定通知は遡って送られませんのでご注意ください）。</p>
+
+<p><strong>Q: Slack 通知を後から有効にしたい。</strong></p>
+<p>システム設定タブで Webhook URL を登録し、テンプレート（または該当会議の準備・設定タブ）で Slack 通知本文を入力すれば、その時点以降の日程確定で通知が飛びます。Webhook URL の取得方法は PRISM-HU 事務局までお問い合わせください。</p>
+
+<p><strong>Q: Google Meet ではなく Zoom や Teams を使いたい。</strong></p>
+<p>「Google Meet URL（任意）」欄に Zoom や Teams のURLを貼ってもメール本文には記載されます。ただし表示文言が「■ Google Meet：」となっていますので、URL自体が Zoom/Teams のものでも構わないか、ご自身でご判断ください（別の文言に変更したい場合は事務局までご相談ください）。</p>
+
+<p><strong>Q: 資料アップロード機能は使わなくてもよいですか？</strong></p>
+<p>はい。参加者がアップロードしなければそのまま会議が進みます。メール本文には「当日欠席される先生は…」という案内が自動で入りますが、使わない教室では参加者が誰もアップロードしないだけで実害はありません。案内文自体を削除したい場合は、PRISM-HU 事務局までご相談ください（カスタマイズ対応）。</p>
+
+<h3 style="color:#1e4d8c; margin-top:36px;">お問い合わせ</h3>
+
+<div style="background:#e8f0fb; border-left:4px solid #1e4d8c; border-radius:8px; padding:16px 20px; margin:16px 0;">
+<p style="margin:0;"><strong>PRISM-HU 事務局</strong><br>
+prism-hu-office@pop.med.hokudai.ac.jp<br>
+<span style="font-size:0.9em; color:#6b7280;">（件名に「MeetSync」とご記載いただけますと、対応がスムーズになります）</span></p>
+</div>
+
+</div>
