@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>PRISM MeetSync</title>
+<title>PRISM meetSync</title>
 <link rel="icon" type="image/png" sizes="32x32" href="favicon.png">
 <link rel="icon" type="image/png" sizes="64x64" href="favicon-64.png">
 <link rel="apple-touch-icon" sizes="180x180" href="apple-touch-icon.png">
@@ -262,7 +262,7 @@ hr.divider{border:none;border-top:1px solid var(--border);margin:18px 0}
 <header>
   <a id="header-home-link" class="header-home" href="#" title="ホーム（会議一覧）に戻る">
     <div class="logo" id="header-org"></div>
-    <h1 id="header-title">MeetSync</h1>
+    <h1 id="header-title">meetSync</h1>
   </a>
 </header>
 <div class="container">
@@ -593,9 +593,9 @@ function hideLoading(){hide('loading');}
 function setHeaderMode_(mode){
   var hdr=document.querySelector('header');
   var t=el('header-title');
-  if(mode==='admin'){hdr.classList.add('header-admin');if(t)t.textContent='MeetSync 運営管理者用画面';document.title='MeetSync 管理画面';}
-  else if(mode==='participant'){if(t)t.textContent='MeetSync';document.title='MeetSync';}
-  else{if(t)t.textContent='MeetSync 共通ポータル';document.title='MeetSync';}
+  if(mode==='admin'){hdr.classList.add('header-admin');if(t)t.textContent='meetSync 運営管理者用画面';document.title='meetSync 管理画面';}
+  else if(mode==='participant'){if(t)t.textContent='meetSync';document.title='meetSync';}
+  else{if(t)t.textContent='meetSync 共通ポータル';document.title='meetSync';}
 }
 function checkCalScroll(){var w=el('pub-cal-wrap');var h=el('pub-cal-hint');var m=el('pub-cal-scroll-msg');if(!w||!h)return;var atEnd=w.scrollLeft+w.clientWidth>=w.scrollWidth-5;if(atEnd){h.classList.add('scrolled-end');if(m)m.style.display='none';}else{h.classList.remove('scrolled-end');if(m)m.style.display='';}}
 /** 名前に敬称を付与する（例: 田中 → 田中 先生） */
@@ -900,7 +900,7 @@ function renderDynamicTabs(vc,vipParts){
   h+='<div id="tab-setup" class="tab-content active">';
   h+='<div class="form-row"><label>\u4f1a\u8b70\u540d</label><input type="text" id="a-title"></div>';
   h+='<div class="form-row"><label>\u958b\u50ac\u6708</label><input type="number" id="a-month" min="1" max="12" step="1" placeholder="\u4f8b\uff1a5" style="max-width:160px"><p class="text-sm text-muted" style="margin-top:4px">1\u301c12 \u306e\u6570\u5b57\u3092\u5165\u529b\u3002</p></div>';
-  h+='<div class="form-row"><label>\u30e1\u30fc\u30eb\u5192\u982d\u306e\u8a18\u8f09\u4e8b\u9805\uff08\u4efb\u610f\uff09</label><textarea id="a-email-prefix-note" rows="3" placeholder="\u4f8b\uff1a\u203b \u4eca\u56de\u3088\u308a\u4f1a\u8b70\u8abf\u6574\u30b7\u30b9\u30c6\u30e0 PRISM MeetSync \u3092\u4f7f\u7528\u3057\u3066\u3044\u307e\u3059\u3002\u3054\u4e0d\u660e\u306a\u70b9\u306f\u2026\u307e\u3067" style="width:100%;min-height:60px;resize:vertical"></textarea><p class="text-sm text-muted" style="margin-top:4px">\u3053\u306e\u4f1a\u8b70\u306e\u5168\u3066\u306e\u30e1\u30fc\u30eb\u672c\u6587\u306e\u5192\u982d\u306b\u633f\u5165\u3055\u308c\u307e\u3059\u3002\u7a7a\u6b04\u306e\u5834\u5408\u306f\u4f55\u3082\u51fa\u3055\u308c\u307e\u305b\u3093\u3002</p></div>';
+  h+='<div class="form-row"><label>\u30e1\u30fc\u30eb\u5192\u982d\u306e\u8a18\u8f09\u4e8b\u9805\uff08\u4efb\u610f\uff09</label><textarea id="a-email-prefix-note" rows="3" placeholder="\u4f8b\uff1a\u203b \u4eca\u56de\u3088\u308a\u4f1a\u8b70\u8abf\u6574\u30b7\u30b9\u30c6\u30e0 PRISM meetSync \u3092\u4f7f\u7528\u3057\u3066\u3044\u307e\u3059\u3002\u3054\u4e0d\u660e\u306a\u70b9\u306f\u2026\u307e\u3067" style="width:100%;min-height:60px;resize:vertical"></textarea><p class="text-sm text-muted" style="margin-top:4px">\u3053\u306e\u4f1a\u8b70\u306e\u5168\u3066\u306e\u30e1\u30fc\u30eb\u672c\u6587\u306e\u5192\u982d\u306b\u633f\u5165\u3055\u308c\u307e\u3059\u3002\u7a7a\u6b04\u306e\u5834\u5408\u306f\u4f55\u3082\u51fa\u3055\u308c\u307e\u305b\u3093\u3002</p></div>';
   h+='<div class="form-row"><label>\u901a\u77e5\u5c02\u7528\u30a2\u30c9\u30ec\u30b9\uff08\u4efb\u610f\uff09</label><textarea id="a-notify-only" rows="3" placeholder="1\u884c1\u4ef6\u3001\u5f62\u5f0f\uff1a\u540d\u524d|email\u3000\u4f8b\uff1a\u7530\u4e2d\u592a\u90ce|tanaka@example.com" style="width:100%;min-height:60px;resize:vertical"></textarea><p class="text-sm text-muted" style="margin-top:4px">\u8abf\u6574\u306b\u306f\u5165\u3089\u305a\u3001\u300c\u65e5\u7a0b\u78ba\u5b9a\u901a\u77e5\u300d\u3068\u300c\u524d\u65e5\u30ea\u30de\u30a4\u30f3\u30c0\u30fc\u300d\u3060\u3051\u9001\u308b\u5b9b\u5148\u3002\u7a7a\u6b04\u306a\u3089\u9001\u4fe1\u3055\u308c\u307e\u305b\u3093\u3002</p></div>';
   h+='<div class="form-row"><label>Google Meet URL\uff08\u4efb\u610f\uff09</label><input type="text" id="a-meet-url" placeholder="https://meet.google.com/xxx-xxxx-xxx" style="width:100%"><p class="text-sm text-muted" style="margin-top:4px">\u524d\u65e5\u30ea\u30de\u30a4\u30f3\u30c0\u30fc\u30e1\u30fc\u30eb\u306b\u8a18\u8f09\u3055\u308c\u307e\u3059\u3002\u7a7a\u6b04\u306a\u3089\u7701\u7565\u3055\u308c\u307e\u3059\u3002</p></div>';
   h+='<div class="form-row"><label>Slack \u901a\u77e5\u672c\u6587\uff08\u4efb\u610f\uff09</label><textarea id="a-slack-template" rows="6" placeholder="\u7a7a\u6b04\u306a\u3089 Slack \u901a\u77e5\u306f\u9001\u3089\u308c\u307e\u305b\u3093" style="width:100%;min-height:100px;resize:vertical;font-family:monospace;font-size:.85rem"></textarea><p class="text-sm text-muted" style="margin-top:4px"><strong>Slack \u3092\u4f7f\u3046\u5834\u5408\u306e\u307f\u3002</strong>\u30b7\u30b9\u30c6\u30e0\u8a2d\u5b9a\u3067 Webhook URL \u306e\u767b\u9332\u304c\u5fc5\u8981\u3002\u30d7\u30ec\u30fc\u30b9\u30db\u30eb\u30c0\uff1a<code>{month}</code> <code>{title}</code> <code>{confirmed_date}</code> <code>{confirmed_venue}</code> <code>{absentees_block}</code> <code>{comments_block}</code></p><button class="btn btn-outline btn-sm" type="button" onclick="insertSetupSlackDefaultTemplate()">\u30c7\u30d5\u30a9\u30eb\u30c8\u3092\u633f\u5165</button></div>';
