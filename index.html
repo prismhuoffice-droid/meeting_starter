@@ -466,17 +466,7 @@ var MEETING_ID  = URL_PARAMS.get('m')     || '';
 var VIEW_MODE   = URL_PARAMS.get('view')  || '';
 var API_URL     = '';
 var RAW_ADMIN_TOKEN = URL_PARAMS.get('admin') || '';
-var ADMIN_SESSION_KEY = 'meetsync_admin_token:' + (ORG_CODE || 'default');
 var ADMIN_TOKEN = RAW_ADMIN_TOKEN;
-
-try {
-  if (!TOKEN && !ADMIN_TOKEN && window.sessionStorage) {
-    ADMIN_TOKEN = window.sessionStorage.getItem(ADMIN_SESSION_KEY) || '';
-  }
-  if (ADMIN_TOKEN && window.sessionStorage) {
-    window.sessionStorage.setItem(ADMIN_SESSION_KEY, ADMIN_TOKEN);
-  }
-} catch (_) { /* non-fatal */ }
 
 function buildCurrentUrlWithoutSecret_(viewMode) {
   var params = [];
@@ -492,6 +482,8 @@ function buildCurrentUrlWithoutSecret_(viewMode) {
 
 var gGreeting          = '';  /* 敬称（先生/様/さん等） */
 var gAdminData         = null;
+var gSetupBaseline     = '';  /* 設定・参加者リストの保存済みスナップショット */
+var gPeriodBaseline    = '';  /* 候補日・時間帯の保存済みスナップショット */
 var gAdminMeetings     = [];
 var gCurrentMeetingId  = '';
 var gShowArchived      = false;
@@ -835,7 +827,7 @@ function testSlackWebhook(){setHtml('sys-slack-msg','<div class="msg msg-info">�
 
 /* Notifications */
 function fetchNotifications(autoRefresh){if(!ADMIN_TOKEN)return;google.script.run.withSuccessHandler(function(r){if(!r||!r.ok)return;var list=r.notifications||[];var nid=list.length?String(list[0].id):'';if(!gNotifInitialized){gLastNotifId=nid;gNotifInitialized=true;renderNotifications(list);return;}if(nid&&nid!==gLastNotifId){gLastNotifId=nid;renderNotifications(list);if(autoRefresh)refreshAdminSilently();}else renderNotifications(list);}).withFailureHandler(function(){}).getNotifications(ADMIN_TOKEN,gCurrentMeetingId);}
-function refreshAdminSilently(){if(!ADMIN_TOKEN)return;google.script.run.withSuccessHandler(function(data){if(!data||!data.ok)return;gAdminMeetings=data.meetings||[];renderMeetingList();if(data.current){gAdminData=data.current;renderMeetingDetailContents(data.current);}}).withFailureHandler(function(){}).getAdminData(ADMIN_TOKEN,gCurrentMeetingId);}
+function refreshAdminSilently(){if(!ADMIN_TOKEN)return;google.script.run.withSuccessHandler(function(data){if(!data||!data.ok)return;gAdminMeetings=data.meetings||[];renderMeetingList();if(serializeSetupForm_()!==gSetupBaseline||serializePeriodForm_()!==gPeriodBaseline)return;if(data.current){gAdminData=data.current;renderMeetingDetailContents(data.current);}}).withFailureHandler(function(){}).getAdminData(ADMIN_TOKEN,gCurrentMeetingId);}
 function renderNotifications(list){var badge=el('notif-badge'),listEl=el('notif-list');if(!badge||!listEl)return;if(list.length===0){listEl.innerHTML='<div class="notif-empty">\u901a\u77e5\u306f\u3042\u308a\u307e\u305b\u3093</div>';badge.classList.add('hidden');gNotifCount=0;return;}listEl.innerHTML=list.map(function(n){var icon=/calendar/.test(n.type)?'📅':n.type==='vote'?'✅':'📌';return'<div class="notif-item"><span class="notif-icon">'+icon+'</span><div class="notif-body"><div class="notif-msg">'+esc(n.message)+'</div><div class="notif-time">'+esc(n.timestamp)+'</div></div></div>';}).join('');var c=Math.min(list.length,99);gNotifCount=c;badge.textContent=c>99?'99+':String(c);badge.classList.remove('hidden');}
 function toggleNotifPanel(){var p=el('notif-panel');gNotifOpen=!gNotifOpen;if(gNotifOpen){p.classList.add('open');fetchNotifications();}else p.classList.remove('open');}
 function closeNotifPanel(){gNotifOpen=false;el('notif-panel').classList.remove('open');}
@@ -885,7 +877,7 @@ function renderMeetingDetailContents(cur){
   var tm=cfg.time_mode||'selectable';var tmr=document.querySelector('input[name="a-time-mode"][value="'+tm+'"]');if(tmr){tmr.checked=true;toggleTimeMode();}
   if(tm==='fixed'){x=el('a-fixed-sh');if(x)x.value=pad2(parseInt(cfg.cal_start_hour||17))+':00';x=el('a-fixed-eh');if(x)x.value=pad2(parseInt(cfg.cal_end_hour||19))+':00';}
   x=el('a-duration');if(x)x.value=String(cfg.meeting_duration||'60');
-  renderParticipantsInput(cur.participants,vc);renderVipTabs(cur);renderOverlapArea(cur);renderVotingTab(cur);renderConfirmTab(cur);renderMaterialsList('a-materials-list',cur.materials||[],true);
+  renderParticipantsInput(cur.participants,vc);renderVipTabs(cur);renderOverlapArea(cur);renderVotingTab(cur);renderConfirmTab(cur);renderMaterialsList('a-materials-list',cur.materials||[],true);captureFormBaselines_();
 }
 
 /* ===== Dynamic admin tabs ===== */
@@ -1218,8 +1210,24 @@ function selectVipDeadlineDate(vipNum,iso){
     .adminSetVipDeadline(ADMIN_TOKEN,gCurrentMeetingId,vipNum,iso);
 }
 
+/* ===== 未保存ガード（設定/候補日の二重フォーム保護） ===== */
+function serializeSetupForm_(){
+  function fv(id){var x=el(id);return x?x.value:'';}
+  var rows=[],tb=el('a-p-tbody');
+  if(tb){var trs=tb.querySelectorAll('tr');for(var i=0;i<trs.length;i++){var row=trs[i],n=row.querySelector('.p-name'),e=row.querySelector('.p-email'),r=row.querySelector('.p-role');rows.push((n?n.value:'')+'|'+(e?e.value:'')+'|'+(r?r.value:''));}}
+  return [fv('a-title'),fv('a-month'),fv('a-deadline'),fv('a-email-prefix-note'),fv('a-notify-only'),fv('a-slack-template'),fv('a-meet-url'),rows.join('\n')].join('');
+}
+function serializePeriodForm_(){
+  function fv(id){var x=el(id);return x?x.value:'';}
+  var dm=(document.querySelector('input[name="a-date-mode"]:checked')||{}).value||'';
+  var tm=(document.querySelector('input[name="a-time-mode"]:checked')||{}).value||'';
+  return [dm,tm,fv('a-cal-start'),fv('a-cal-end'),fv('a-cal-sh'),fv('a-cal-eh'),fv('a-fixed-sh'),fv('a-fixed-eh'),fv('a-duration'),(gSpecificDates||[]).join(',')].join('');
+}
+function captureFormBaselines_(){gSetupBaseline=serializeSetupForm_();gPeriodBaseline=serializePeriodForm_();}
+
 /* ===== Save setup ===== */
 function saveSetup(){
+  if(serializePeriodForm_()!==gPeriodBaseline){if(confirm('「候補日・時間帯」に保存していない入力があります。\nこのまま「設定」を保存すると、その入力は失われます。\n\n[OK] 中止して戻る（おすすめ）／[キャンセル] かまわず保存')){setHtml('a-setup-msg','<div class="msg msg-error">先に〔候補日・時間帯を保存する〕を押してください。</div>');return;}}
   var title=el('a-title').value.trim(),dl=el('a-deadline').value.trim(),month=el('a-month').value.trim();
   var prefNote=(el('a-email-prefix-note')&&el('a-email-prefix-note').value)||'';
   var notifyOnly=(el('a-notify-only')&&el('a-notify-only').value)||'';
@@ -1257,6 +1265,7 @@ function renderSpecificDateList(){
   le.innerHTML=gSpecificDates.map(function(ds,i){var d=new Date(ds+'T00:00:00');var lbl=(d.getMonth()+1)+'/'+d.getDate()+'（'+JP[d.getDay()]+'）';return '<span style="display:inline-flex;align-items:center;gap:4px;background:var(--blue-lt);border-radius:6px;padding:4px 10px;margin:3px;font-size:.85rem">'+esc(lbl)+'<button style="background:none;border:none;cursor:pointer;color:var(--red);font-size:.9rem;padding:0 2px" onclick="removeSpecificDate('+i+')">×</button></span>';}).join('');
 }
 function savePeriod(){
+  if(serializeSetupForm_()!==gSetupBaseline){if(confirm('「設定・参加者リスト」に保存していない入力があります。\nこのまま「候補日・時間帯」を保存すると、その入力は失われます。\n\n[OK] 中止して戻る（おすすめ）／[キャンセル] かまわず保存')){setHtml('a-prof-msg','<div class="msg msg-error">先に〔設定を保存する〕を押してください。</div>');return;}}
   var dateMode=(document.querySelector('input[name="a-date-mode"]:checked')||{}).value||'range';
   var timeMode=(document.querySelector('input[name="a-time-mode"]:checked')||{}).value||'selectable';
   var s=el('a-cal-start').value||'',e=el('a-cal-end').value||'';
