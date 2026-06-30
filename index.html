@@ -28,6 +28,7 @@ header a.header-home:hover{opacity:.85}
 .badge-progress{background:var(--amber-lt);color:var(--amber)}
 .badge-confirmed{background:var(--green-lt);color:var(--green)}
 .badge-today{background:#fce7f3;color:#9d174d}
+.badge-completed{background:var(--gray-lt);color:var(--gray)}
 .badge-dot{width:7px;height:7px;border-radius:50%;background:currentColor}
 .badge-progress .badge-dot{animation:pulse 1.2s ease-in-out infinite}
 @keyframes pulse{0%,100%{opacity:1}50%{opacity:.3}}
@@ -517,7 +518,7 @@ function buildDynamicStatusToStep(vipCount) {
   var map = { setup: 0 };
   for (var i = 1; i <= vipCount; i++) map['vip_' + i + '_adjusting'] = i;
   var base = vipCount;
-  map.candidates_set = base + 1; map.voting = base + 2; map.confirmed = base + 3; map.today = base + 4;
+  map.candidates_set = base + 1; map.voting = base + 2; map.confirmed = base + 3; map.today = base + 4; map.completed = base + 4;
   return map;
 }
 function updateDynamicSteps(vipCount, vipNames, month) {
@@ -610,6 +611,7 @@ function circled(i){return CIRCLED[i]||(i+1);}
 function statusBadge(s){
   if(s==='confirmed')return'<span class="badge badge-confirmed"><span class="badge-dot"></span>\u65e5\u6642\u78ba\u5b9a</span>';
   if(s==='today')return'<span class="badge badge-today"><span class="badge-dot"></span>\u672c\u65e5\u958b\u50ac</span>';
+  if(s==='completed')return'<span class="badge badge-completed"><span class="badge-dot"></span>\u958b\u50ac\u6e08\u307f</span>';
   if(s==='setup'||!s)return'<span class="badge badge-setup"><span class="badge-dot"></span>\u6e96\u5099\u4e2d</span>';
   return'<span class="badge badge-progress"><span class="badge-dot"></span>\u8abf\u6574\u4e2d</span>';
 }
@@ -693,8 +695,8 @@ function renderPublicVipCalendar(data){
   setTimeout(function(){var w=el('pub-cal-wrap');if(w&&w.scrollWidth<=w.clientWidth){var hi=el('pub-cal-hint');if(hi)hi.classList.add('scrolled-end');var ms=el('pub-cal-scroll-msg');if(ms)ms.style.display='none';}},100);
 }
 function renderPublicList(list){
-  var allC=list.length>0&&list.every(function(m){return m.status==='confirmed'||m.status==='today';});
-  var anyA=list.some(function(m){return m.status!=='confirmed'&&m.status!=='today';});
+  var allC=list.length>0&&list.every(function(m){return m.status==='confirmed'||m.status==='today'||m.status==='completed';});
+  var anyA=list.some(function(m){return m.status!=='confirmed'&&m.status!=='today'&&m.status!=='completed';});
   if(list.length===0){setText('sl-title','\u4f1a\u8b70\u4e00\u89a7');setText('sl-subtitle','\u73fe\u5728\u3001\u767b\u9332\u3055\u308c\u3066\u3044\u308b\u4f1a\u8b70\u306f\u3042\u308a\u307e\u305b\u3093\u3002');}
   else if(allC){setText('sl-title','\u65e5\u6642\u78ba\u5b9a\u6e08\u307f\u306e\u4f1a\u8b70');setText('sl-subtitle','\u65e5\u6642\u304c\u78ba\u5b9a\u3057\u305f\u4f1a\u8b70\u306e\u4e00\u89a7\u3067\u3059\u3002');}
   else if(anyA){setText('sl-title','\u8abf\u6574\u4e2d\u306e\u4f1a\u8b70');setText('sl-subtitle','\u73fe\u5728\u8abf\u6574\u4e2d\u306e\u4f1a\u8b70\u306e\u4e00\u89a7\u3067\u3059\u3002');}
@@ -819,7 +821,8 @@ function selectResp(btn,label){var row=btn.closest('.date-row');row.querySelecto
 function submitVote(){var rows=document.querySelectorAll('#v-date-grid .date-row'),responses=[],ok=true;rows.forEach(function(row){var did=row.getAttribute('data-date-id');var sel=row.querySelector('.sel-maru,.sel-sankaku,.sel-batsu');var cmtEl=row.querySelector('.v-comment');var cmt=cmtEl?cmtEl.value.trim():'';if(!sel){ok=false;return;}responses.push({dateId:did,response:sel.textContent.trim(),comment:cmt});});if(!ok){el('v-form-msg').innerHTML='<div class="msg msg-error">\u3059\u3079\u3066\u306e\u65e5\u7a0b\u306b\u3064\u3044\u3066\u3054\u56de\u7b54\u304f\u3060\u3055\u3044\u3002</div>';return;}var btn=el('v-submit-btn');btn.disabled=true;btn.textContent='\u9001\u4fe1\u4e2d...';google.script.run.withSuccessHandler(function(r){btn.disabled=false;btn.textContent='\u56de\u7b54\u3092\u9001\u4fe1\u3059\u308b';if(r.ok)el('v-form-msg').innerHTML='<div class="msg msg-success">\u56de\u7b54\u3092\u9001\u4fe1\u3057\u307e\u3057\u305f\u3002</div>';else el('v-form-msg').innerHTML='<div class="msg msg-error">\u9001\u4fe1\u306b\u5931\u6557\u3057\u307e\u3057\u305f\uff1a'+esc(r.message||r.error||'')+'</div>';}).withFailureHandler(function(){btn.disabled=false;btn.textContent='\u56de\u7b54\u3092\u9001\u4fe1\u3059\u308b';el('v-form-msg').innerHTML='<div class="msg msg-error">\u901a\u4fe1\u30a8\u30e9\u30fc\u304c\u767a\u751f\u3057\u307e\u3057\u305f\u3002</div>';}).submitAvailability(TOKEN,responses);}
 
 /* ===== Admin ===== */
-function loadAdminData(){show('loading');google.script.run.withSuccessHandler(renderAdmin).withFailureHandler(function(err){hideLoading();showError((err&&err.message)||'\u7ba1\u7406\u8005\u30c7\u30fc\u30bf\u306e\u53d6\u5f97\u306b\u5931\u6557\u3057\u307e\u3057\u305f\u3002');}).getAdminData(ADMIN_TOKEN,gCurrentMeetingId);fetchNotifications();}
+function loadAdminData(){show('loading');google.script.run.withSuccessHandler(function(data){if(!renderAdminList(data))return;if(gCurrentMeetingId)loadAdminMeetingDetail(gCurrentMeetingId,false);else{clearAdminDetail_();hideLoading();fetchNotifications();}}).withFailureHandler(function(err){hideLoading();showError((err&&err.message)||'\u7ba1\u7406\u8005\u30c7\u30fc\u30bf\u306e\u53d6\u5f97\u306b\u5931\u6557\u3057\u307e\u3057\u305f\u3002');}).getAdminMeetingList(ADMIN_TOKEN);}
+function loadAdminMeetingDetail(id,showSpinner){if(!id)return;if(showSpinner!==false)show('loading');google.script.run.withSuccessHandler(function(data){renderAdminDetail(data);fetchNotifications();}).withFailureHandler(function(err){hideLoading();showError((err&&err.message)||'\u4f1a\u8b70\u8a73\u7d30\u306e\u53d6\u5f97\u306b\u5931\u6557\u3057\u307e\u3057\u305f\u3002');}).getAdminMeetingDetail(ADMIN_TOKEN,id);}
 function showTopTab(name){gCurrentTopTab=name;var tabs=document.querySelectorAll('#admin-top-tabs .top-tab-btn');tabs.forEach(function(b){b.classList.remove('active');});document.querySelectorAll('.top-tab-content').forEach(function(c){c.classList.remove('active');});if(name==='meetings'){tabs[0].classList.add('active');el('top-tab-meetings').classList.add('active');}else if(name==='templates'){tabs[1].classList.add('active');el('top-tab-templates').classList.add('active');loadTemplates();}else if(name==='system'){tabs[2].classList.add('active');el('top-tab-system').classList.add('active');loadSlackConfig();}}
 function loadSlackConfig(){google.script.run.withSuccessHandler(function(r){if(!r||!r.ok)return;var x=el('sys-slack-webhook');if(x)x.value=r.webhookUrl||'';gSlackDefaultTemplate=r.defaultTemplate||'';}).withFailureHandler(function(){}).adminGetSlackConfig(ADMIN_TOKEN);}
 function saveSlackWebhook(){var url=(el('sys-slack-webhook')||{}).value||'';setHtml('sys-slack-msg','<div class="msg msg-info">保存中…</div>');google.script.run.withSuccessHandler(function(r){setHtml('sys-slack-msg',r&&r.ok?'<div class="msg msg-success">保存しました。</div>':'<div class="msg msg-error">保存に失敗：'+((r&&r.error)||'')+'</div>');}).withFailureHandler(function(err){setHtml('sys-slack-msg','<div class="msg msg-error">通信エラー：'+((err&&err.message)||err)+'</div>');}).adminSetSlackWebhookUrl(ADMIN_TOKEN,url.trim());}
@@ -827,20 +830,30 @@ function testSlackWebhook(){setHtml('sys-slack-msg','<div class="msg msg-info">�
 
 /* Notifications */
 function fetchNotifications(autoRefresh){if(!ADMIN_TOKEN)return;google.script.run.withSuccessHandler(function(r){if(!r||!r.ok)return;var list=r.notifications||[];var nid=list.length?String(list[0].id):'';if(!gNotifInitialized){gLastNotifId=nid;gNotifInitialized=true;renderNotifications(list);return;}if(nid&&nid!==gLastNotifId){gLastNotifId=nid;renderNotifications(list);if(autoRefresh)refreshAdminSilently();}else renderNotifications(list);}).withFailureHandler(function(){}).getNotifications(ADMIN_TOKEN,gCurrentMeetingId);}
-function refreshAdminSilently(){if(!ADMIN_TOKEN)return;google.script.run.withSuccessHandler(function(data){if(!data||!data.ok)return;gAdminMeetings=data.meetings||[];renderMeetingList();if(serializeSetupForm_()!==gSetupBaseline||serializePeriodForm_()!==gPeriodBaseline)return;if(data.current){gAdminData=data.current;renderMeetingDetailContents(data.current);}}).withFailureHandler(function(){}).getAdminData(ADMIN_TOKEN,gCurrentMeetingId);}
+function refreshAdminSilently(){if(!ADMIN_TOKEN)return;google.script.run.withSuccessHandler(function(data){if(!data||!data.ok)return;gAdminMeetings=data.meetings||[];renderMeetingList();if(!gCurrentMeetingId)return;if(serializeSetupForm_()!==gSetupBaseline||serializePeriodForm_()!==gPeriodBaseline)return;google.script.run.withSuccessHandler(function(d){if(d&&d.ok&&d.current){gAdminData=d.current;renderMeetingDetailContents(d.current);}}).withFailureHandler(function(){}).getAdminMeetingDetail(ADMIN_TOKEN,gCurrentMeetingId);}).withFailureHandler(function(){}).getAdminMeetingList(ADMIN_TOKEN);}
 function renderNotifications(list){var badge=el('notif-badge'),listEl=el('notif-list');if(!badge||!listEl)return;if(list.length===0){listEl.innerHTML='<div class="notif-empty">\u901a\u77e5\u306f\u3042\u308a\u307e\u305b\u3093</div>';badge.classList.add('hidden');gNotifCount=0;return;}listEl.innerHTML=list.map(function(n){var icon=/calendar/.test(n.type)?'📅':n.type==='vote'?'✅':'📌';return'<div class="notif-item"><span class="notif-icon">'+icon+'</span><div class="notif-body"><div class="notif-msg">'+esc(n.message)+'</div><div class="notif-time">'+esc(n.timestamp)+'</div></div></div>';}).join('');var c=Math.min(list.length,99);gNotifCount=c;badge.textContent=c>99?'99+':String(c);badge.classList.remove('hidden');}
 function toggleNotifPanel(){var p=el('notif-panel');gNotifOpen=!gNotifOpen;if(gNotifOpen){p.classList.add('open');fetchNotifications();}else p.classList.remove('open');}
 function closeNotifPanel(){gNotifOpen=false;el('notif-panel').classList.remove('open');}
 document.addEventListener('click',function(e){var w=el('notif-wrap');if(w&&!w.contains(e.target))closeNotifPanel();});
 function startNotifPolling(){if(gNotifPollTimer)clearInterval(gNotifPollTimer);gNotifPollTimer=setInterval(function(){if(ADMIN_TOKEN)fetchNotifications(true);},30000);}
 
-function renderAdmin(data){
-  hideLoading();if(!data||!data.ok){showError(data&&data.error==='unauthorized'?'\u7ba1\u7406\u8005URL\u304c\u6b63\u3057\u304f\u3042\u308a\u307e\u305b\u3093\u3002':'\u8aad\u307f\u8fbc\u307f\u306b\u5931\u6557\u3057\u307e\u3057\u305f');return;}
+function renderAdminList(data){
+  if(!data||!data.ok){hideLoading();showError(data&&data.error==='unauthorized'?'\u7ba1\u7406\u8005URL\u304c\u6b63\u3057\u304f\u3042\u308a\u307e\u305b\u3093\u3002':'\u8aad\u307f\u8fbc\u307f\u306b\u5931\u6557\u3057\u307e\u3057\u305f');return false;}
   gAdminMeetings=data.meetings||[];if(data.orgName){gOrgName=data.orgName;setText('header-org',gOrgName);}if(data.emailGreeting)gGreeting=data.emailGreeting;
   renderMeetingList();show('v-admin');startNotifPolling();
-  if(data.hasTemplates===false&&!gCurrentMeetingId){showSetupWizard();return;}
-  if(data.current){gAdminData=data.current;gCurrentMeetingId=data.current.cfg.id;renderMeetingDetail(data.current);}
-  else{gAdminData=null;hide('a-meeting-detail');if(gAdminMeetings.length===0)hide('a-no-meeting');else show('a-no-meeting');}
+  if(data.hasTemplates===false&&!gCurrentMeetingId){hideLoading();showSetupWizard();return false;}
+  return true;
+}
+function clearAdminDetail_(){gAdminData=null;hide('a-meeting-detail');if(gAdminMeetings.length===0)hide('a-no-meeting');else show('a-no-meeting');}
+function renderAdminDetail(data){
+  hideLoading();if(!data||!data.ok){showError(data&&data.error==='unauthorized'?'\u7ba1\u7406\u8005URL\u304c\u6b63\u3057\u304f\u3042\u308a\u307e\u305b\u3093\u3002':'\u4f1a\u8b70\u8a73\u7d30\u306e\u8aad\u307f\u8fbc\u307f\u306b\u5931\u6557\u3057\u307e\u3057\u305f');return;}
+  if(data.current){gAdminData=data.current;gCurrentMeetingId=data.current.cfg.id;renderMeetingList();renderMeetingDetail(data.current);}
+  else clearAdminDetail_();
+}
+function renderAdmin(data){
+  if(!renderAdminList(data))return;
+  if(data.current)renderAdminDetail({ok:true,current:data.current});
+  else{clearAdminDetail_();hideLoading();}
 }
 
 function renderMeetingDetail(cur){
@@ -1000,7 +1013,7 @@ function renderMeetingList(){
   c.innerHTML=ms.map(function(m){var ia=m.archived==='true';var is=String(m.id)===String(gCurrentMeetingId);var badge=statusBadge(m.status);var ml=m.month?m.month+'\u6708':'---';var cf=m.confirmedDate?'<div class="text-sm" style="color:var(--green);font-weight:600">'+esc(m.confirmedDate)+'</div>':'';var cls='meeting-tile'+(is?' selected':'')+(ia?' archived':'');var ab=ia?'<button class="btn btn-outline btn-sm" onclick="unarchiveMeeting(event,\''+esc(m.id)+'\')">\u5fa9\u5143</button>':'<button class="btn btn-gray btn-sm" onclick="archiveMeeting(event,\''+esc(m.id)+'\')">\u30a2\u30fc\u30ab\u30a4\u30d6</button>';return'<div class="'+cls+'" onclick="selectMeeting(\''+esc(m.id)+'\')"><div class="mt-title">'+esc(m.title||'(\u7121\u984c)')+'</div><div class="mt-meta">'+badge+'<span>'+esc(ml)+'</span></div>'+cf+'<div class="mt-actions" onclick="event.stopPropagation()">'+ab+'</div></div>';}).join('');
 }
 function toggleArchivedView(){gShowArchived=el('a-show-archived').checked;renderMeetingList();}
-function selectMeeting(id){if(String(id)===String(gCurrentMeetingId))return;gCurrentMeetingId=String(id);gCurrentTab='setup';loadAdminData();}
+function selectMeeting(id){if(String(id)===String(gCurrentMeetingId))return;gCurrentMeetingId=String(id);gCurrentTab='setup';renderMeetingList();loadAdminMeetingDetail(gCurrentMeetingId,true);}
 function backToMeetingList(){gCurrentMeetingId='';gAdminData=null;hide('a-meeting-detail');renderMeetingList();if(gAdminMeetings.length>0)show('a-no-meeting');}
 
 /* ===== Meeting creation ===== */
@@ -1387,7 +1400,7 @@ function resetMeeting(){if(!confirm('\u30b9\u30c6\u30fc\u30bf\u30b9\u3092\u30ea\
 
 /* ===== Tab switching ===== */
 function showTab(name){gCurrentTab=name;document.querySelectorAll('#a-tabs .tab-btn').forEach(function(b){b.classList.toggle('active',b.getAttribute('data-tab')===name);});document.querySelectorAll('#a-tab-contents > .tab-content').forEach(function(c){c.classList.remove('active');});var t=el('tab-'+name);if(t)t.classList.add('active');}
-function autoNavigateTab(status,vc){vc=vc||0;for(var i=1;i<=vc;i++){if(status==='vip_'+i+'_adjusting'){gCurrentTab='vip_'+i;return;}}var m={candidates_set:'candidates',voting:'voting',confirmed:'confirm',today:'confirm'};if(m[status])gCurrentTab=m[status];}
+function autoNavigateTab(status,vc){vc=vc||0;for(var i=1;i<=vc;i++){if(status==='vip_'+i+'_adjusting'){gCurrentTab='vip_'+i;return;}}var m={candidates_set:'candidates',voting:'voting',confirmed:'confirm',today:'confirm',completed:'confirm'};if(m[status])gCurrentTab=m[status];}
 
 /* ===== Template management ===== */
 function loadTemplates(){google.script.run.withSuccessHandler(function(r){if(!r||!r.ok)return;gTemplates=r.templates||[];renderTemplateList();}).withFailureHandler(function(){}).adminGetTemplates(ADMIN_TOKEN);if(!gSlackDefaultTemplate){google.script.run.withSuccessHandler(function(r){if(r&&r.ok)gSlackDefaultTemplate=r.defaultTemplate||'';}).withFailureHandler(function(){}).adminGetSlackConfig(ADMIN_TOKEN);}}
