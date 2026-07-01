@@ -48,6 +48,7 @@ header a.header-home:hover{opacity:.85}
 .confirmed-block{background:var(--green-lt);border:2px solid var(--green);border-radius:var(--radius);padding:20px;text-align:center;margin:14px 0}
 .confirmed-block .date-big{font-size:1.35rem;font-weight:700;color:var(--green);margin:8px 0}
 .confirmed-block .venue{font-size:.88rem;color:#1a7a4a}
+.confirmed-block .venue-change{margin-top:12px;padding:10px;border-radius:8px;background:var(--amber-lt);border:1px solid var(--amber);color:#7c2d12;font-size:.86rem;font-weight:600;text-align:left}
 .stats{display:flex;gap:14px;flex-wrap:wrap;margin-top:14px}
 .stat-card{flex:1;min-width:110px;background:var(--gray-lt);border-radius:8px;padding:12px 14px;text-align:center}
 .stat-num{font-size:1.7rem;font-weight:700;color:var(--blue)}
@@ -622,6 +623,26 @@ function renderSteps8(status){
     return'<div class="step-8 '+cls+'"><div class="step-8-circle">'+(i<cur?'\u2713':(i+1))+'</div><div class="step-8-label">'+esc(label).replace('\n','<br>')+'</div></div>';
   }).join('')+'</div>';
 }
+function venueChangeNoticeFrom_(data){
+  if(!data)return'';
+  var explicit=data.venueChangeNotice||data.venue_change_notice||'';
+  if(explicit)return explicit;
+  var changed=data.venueChangedAt||data.venue_changed_at||'';
+  if(!changed)return'';
+  var prev=String(data.venuePrevious||data.venue_previous||'').trim();
+  var venue=String(data.confirmedVenue||data.confirmed_venue||'').trim();
+  if(prev&&venue&&prev!==venue)return'会場が変更されました。旧会場：'+prev+' / 新会場：'+venue;
+  if(venue)return'会場が変更されました。新しい会場：'+venue;
+  return'会場が変更されました。';
+}
+function confirmedBlockHtml_(data,label){
+  data=data||{};
+  var date=data.confirmedDate||data.confirmed_date||'';
+  if(!date)return'';
+  var venue=data.confirmedVenue||data.confirmed_venue||'';
+  var notice=venueChangeNoticeFrom_(data);
+  return'<div class="confirmed-block"><p style="font-size:.78rem;color:var(--green)">'+esc(label||'日程が確定しました')+'</p><div class="date-big">'+esc(date)+'</div>'+(venue?'<div class="venue">@ '+esc(venue)+'</div>':'')+(notice?'<div class="venue-change">'+esc(notice)+'</div>':'')+'</div>';
+}
 
 /* ===== Public status ===== */
 var gPublicCameFromList=false;
@@ -638,8 +659,7 @@ function renderStatus(data){
   setText('s-title',data.meetingTitle);
   setHtml('s-steps',renderSteps8(data.status));
   el('s-message').innerHTML='<p>'+esc(data.statusMessage)+'</p>';
-  if(data.confirmedDate)el('s-confirmed').innerHTML='<div class="confirmed-block"><p style="font-size:.78rem;color:var(--green)">\u6b21\u56de\u306e\u958b\u50ac\u65e5\u7a0b</p><div class="date-big">'+esc(data.confirmedDate)+'</div>'+(data.confirmedVenue?'<div class="venue">@ '+esc(data.confirmedVenue)+'</div>':'')+'</div>';
-  else el('s-confirmed').innerHTML='';
+  setHtml('s-confirmed',confirmedBlockHtml_(data,'\u6b21\u56de\u306e\u958b\u50ac\u65e5\u7a0b'));
   if(data.status==='voting'&&data.total>0){var pct=Math.round(data.responded/data.total*100);el('s-stats').innerHTML='<div class="stats"><div class="stat-card"><div class="stat-num">'+data.responded+'/'+data.total+'</div><div class="stat-label">\u56de\u7b54\u6e08\u307f</div></div></div><div class="progress-bar"><div class="progress-fill" style="width:'+pct+'%"></div></div><p class="text-sm text-muted">'+pct+'% \u56de\u7b54\u6e08\u307f</p>';}
   else el('s-stats').innerHTML='';
   /* VIP候補カレンダー表示 */
@@ -727,7 +747,7 @@ function renderCalendarView(data){
   var vc=parseInt(data.vipCount||'0',10);updateDynamicSteps(vc,[],data.meetingMonth||'');
   setText('cal-greeting','\u3053\u3093\u306b\u3061\u306f\u3001'+data.name+' '+(data.emailGreeting||'\u5148\u751f'));
   setText('cal-subtitle',data.meetingTitle);
-  if(data.confirmedDate)el('cal-confirmed-block').innerHTML='<div class="confirmed-block"><p style="font-size:.78rem;color:var(--green)">\u65e5\u7a0b\u304c\u78ba\u5b9a\u3057\u307e\u3057\u305f</p><div class="date-big">'+esc(data.confirmedDate)+'</div>'+(data.confirmedVenue?'<div class="venue">@ '+esc(data.confirmedVenue)+'</div>':'')+'</div>';
+  setHtml('cal-confirmed-block',confirmedBlockHtml_(data,'\u65e5\u7a0b\u304c\u78ba\u5b9a\u3057\u307e\u3057\u305f'));
   if(!data.calReady){
     el('cal-form-area').classList.add('hidden');
     var wm=data.isFirstVip?'\u62c5\u5f53\u8005\u3088\u308a\u65e5\u7a0b\u8abf\u6574\u306e\u3054\u6848\u5185\u304c\u5c4a\u304d\u307e\u3059\u3002':'\u524d\u306e\u65b9\u306e\u5165\u529b\u5b8c\u4e86\u5f8c\u306b\u3054\u6848\u5185\u3044\u305f\u3057\u307e\u3059\u3002';
@@ -803,7 +823,7 @@ function submitCalendar(){if(gCalSlots.length===0){el('cal-msg').innerHTML='<div
 function renderVoteView(data){
   var vc=parseInt(data.vipCount||'0',10);updateDynamicSteps(vc,[],data.meetingMonth||'');
   setText('v-greeting','\u3053\u3093\u306b\u3061\u306f\u3001'+data.name+' '+(data.emailGreeting||'\u5148\u751f'));setText('v-subtitle',data.meetingTitle);
-  if(data.confirmedDate)el('v-confirmed-block').innerHTML='<div class="confirmed-block"><p style="font-size:.78rem;color:var(--green)">\u65e5\u7a0b\u304c\u78ba\u5b9a\u3057\u307e\u3057\u305f</p><div class="date-big">'+esc(data.confirmedDate)+'</div>'+(data.confirmedVenue?'<div class="venue">@ '+esc(data.confirmedVenue)+'</div>':'')+'</div>';
+  setHtml('v-confirmed-block',confirmedBlockHtml_(data,'\u65e5\u7a0b\u304c\u78ba\u5b9a\u3057\u307e\u3057\u305f'));
   if(data.status==='voting'&&data.dates&&data.dates.length>0){
     el('v-form-area').classList.remove('hidden');setText('v-deadline-msg',data.deadline?'\u56de\u7b54\u671f\u9650\uff1a'+data.deadline:'');
     var gh='';data.dates.forEach(function(d){var cur=data.existing[d.id]||'';var cmt=(data.comments&&data.comments[d.id])?data.comments[d.id]:'';
@@ -938,7 +958,7 @@ function renderDynamicTabs(vc,vipParts){
   /* Voting */
   h+='<div id="tab-voting" class="tab-content"><div class="flex justify-between items-center flex-wrap gap-2" style="margin-bottom:14px"><span id="a-vote-stats" class="text-sm"></span><button class="btn btn-gray btn-sm" onclick="loadAdminData()">\u66f4\u65b0</button></div><div id="a-matrix-wrap" class="table-wrap"></div><hr class="divider"><div class="section-title">\u53c2\u52a0\u8005\u4e00\u89a7</div><div class="table-wrap"><table><thead><tr><th>\u5f79\u5272</th><th>\u6c0f\u540d</th><th>\u30e1\u30fc\u30eb</th><th>\u56de\u7b54</th><th>\u64cd\u4f5c</th></tr></thead><tbody id="a-voters-tbody"></tbody></table></div><hr class="divider"><div class="section-title">\u56de\u7b54\u671f\u9650</div><p class="text-sm text-muted" style="margin-bottom:8px">\u6295\u7968\u8005\u3078\u306e\u30e1\u30fc\u30eb\u306b\u8a18\u8f09\u3055\u308c\u307e\u3059\u3002\u65e5\u4ed8\u3092\u30af\u30ea\u30c3\u30af\u3059\u308b\u3068\u5373\u5ea7\u306b\u4fdd\u5b58\u3055\u308c\u307e\u3059\u3002</p><div class="deadline-cal-wrap"><div class="deadline-cal-display"><button type="button" class="btn btn-sm" onclick="deadlineCalPrevMonth()">\u2039</button><span id="deadline-cal-label" class="text-sm" style="margin:0 12px"></span><button type="button" class="btn btn-sm" onclick="deadlineCalNextMonth()">\u203a</button></div><table class="deadline-cal-table" id="deadline-cal-table"></table><p class="text-sm" id="deadline-cal-selected" style="margin-top:6px"></p></div><div id="a-vote-msg" style="margin-top:12px"></div><div class="mt-4"><button class="btn btn-amber" onclick="sendVoteEmails()">\u51fa\u6b20\u78ba\u8a8d\u30e1\u30fc\u30eb\u3092\u9001\u4fe1\u3059\u308b</button></div></div>';
   /* Confirm */
-  h+='<div id="tab-confirm" class="tab-content"><div id="c-confirmed-block"></div><div class="info-box info-box-blue" style="margin-bottom:18px"><h3>\u65e5\u7a0b\u78ba\u5b9a</h3><p>\u78ba\u5b9a\u3059\u308b\u3068\u5168\u53c2\u52a0\u8005\u306b\u901a\u77e5\u30e1\u30fc\u30eb\u304c\u9001\u4fe1\u3055\u308c\u307e\u3059\u3002</p></div><div class="form-row"><label>\u78ba\u5b9a\u3059\u308b\u65e5\u7a0b</label><select id="c-date-sel"><option value="">\u9078\u629e\u3057\u3066\u304f\u3060\u3055\u3044</option></select></div><div class="form-row"><label>\u4f1a\u5834</label><input type="text" id="c-venue" placeholder="\u4f8b\uff1a\u4f1a\u8b70\u5ba4 2F"></div><div id="c-msg"></div><div class="mt-4"><button class="btn btn-success" onclick="confirmDate()">\u78ba\u5b9a\u3057\u3066\u5168\u54e1\u306b\u901a\u77e5\u3059\u308b</button></div><hr class="divider"><div class="section-title">\u30ea\u30bb\u30c3\u30c8</div><button class="btn btn-gray btn-sm" onclick="resetMeeting()">\u30b9\u30c6\u30fc\u30bf\u30b9\u3092\u30ea\u30bb\u30c3\u30c8</button></div>';
+  h+='<div id="tab-confirm" class="tab-content"><div id="c-confirmed-block"></div><div class="info-box info-box-blue" style="margin-bottom:18px"><h3>\u65e5\u7a0b\u78ba\u5b9a</h3><p>\u78ba\u5b9a\u3059\u308b\u3068\u5168\u53c2\u52a0\u8005\u306b\u901a\u77e5\u30e1\u30fc\u30eb\u304c\u9001\u4fe1\u3055\u308c\u307e\u3059\u3002</p></div><div class="form-row"><label>\u78ba\u5b9a\u3059\u308b\u65e5\u7a0b</label><select id="c-date-sel"><option value="">\u9078\u629e\u3057\u3066\u304f\u3060\u3055\u3044</option></select></div><div class="form-row"><label>\u4f1a\u5834</label><input type="text" id="c-venue" placeholder="\u4f8b\uff1a\u4f1a\u8b70\u5ba4 2F"></div><div id="c-msg"></div><div class="mt-4 flex flex-wrap gap-2"><button class="btn btn-success" onclick="confirmDate()">\u78ba\u5b9a\u3057\u3066\u5168\u54e1\u306b\u901a\u77e5\u3059\u308b</button><button class="btn btn-outline" id="c-venue-update-btn" type="button" onclick="updateConfirmedVenue()" style="display:none">\u4f1a\u5834\u5909\u66f4\u3092\u4fdd\u5b58</button></div><hr class="divider"><div class="section-title">\u30ea\u30bb\u30c3\u30c8</div><button class="btn btn-gray btn-sm" onclick="resetMeeting()">\u30b9\u30c6\u30fc\u30bf\u30b9\u3092\u30ea\u30bb\u30c3\u30c8</button></div>';
   el('a-tab-contents').innerHTML=h;
 }
 
@@ -1394,8 +1414,27 @@ function resendVoter(pid){if(!confirm('\u3053\u306e\u53c2\u52a0\u8005\u306b\u518
 function sendVoteEmails(){if(!confirm('\u51fa\u6b20\u78ba\u8a8d\u30e1\u30fc\u30eb\u3092\u5168\u6295\u7968\u8005\u306b\u9001\u4fe1\u3057\u307e\u3059\u304b\uff1f'))return;setHtml('a-vote-msg','<div class="msg msg-info">\u9001\u4fe1\u4e2d...</div>');google.script.run.withSuccessHandler(function(r){if(r.ok){setHtml('a-vote-msg',buildStepGuideMsg_(r.sent+'名に送信しました。'+(r.errors&&r.errors.length?'（エラー：'+r.errors.join('、')+')':''),'回答が集まったら、日程確定タブで日程を確定してください。'));loadAdminData();}else setHtml('a-vote-msg','<div class="msg msg-error">\u9001\u4fe1\u5931\u6557\uff1a'+esc(r.message||r.error||'')+'</div>');}).adminSendVoteInvitations(ADMIN_TOKEN,gCurrentMeetingId);}
 
 /* ===== Confirm ===== */
-function renderConfirmTab(data){var s=el('c-date-sel');if(s){s.innerHTML='<option value="">\u9078\u629e\u3057\u3066\u304f\u3060\u3055\u3044</option>';data.dates.forEach(function(d){var o=document.createElement('option');o.value=d.id;o.textContent=d.label;s.appendChild(o);});}var v=el('c-venue');if(v)v.value=data.cfg.confirmed_venue||'';var cb=el('c-confirmed-block');if(cb&&data.cfg.confirmed_date)cb.innerHTML='<div class="confirmed-block"><p style="font-size:.78rem;color:var(--green)">\u78ba\u5b9a\u6e08\u307f</p><div class="date-big">'+esc(data.cfg.confirmed_date)+'</div>'+(data.cfg.confirmed_venue?'<div class="venue">@ '+esc(data.cfg.confirmed_venue)+'</div>':'')+'</div>';}
+function renderConfirmTab(data){
+  var s=el('c-date-sel');if(s){s.innerHTML='<option value="">\u9078\u629e\u3057\u3066\u304f\u3060\u3055\u3044</option>';data.dates.forEach(function(d){var o=document.createElement('option');o.value=d.id;o.textContent=d.label;s.appendChild(o);});}
+  var cfg=data.cfg||{};
+  var v=el('c-venue');if(v)v.value=cfg.confirmed_venue||'';
+  setHtml('c-confirmed-block',confirmedBlockHtml_(cfg,'\u78ba\u5b9a\u6e08\u307f'));
+  var ub=el('c-venue-update-btn');if(ub)ub.style.display=(cfg.confirmed_date&&cfg.status!=='completed')?'inline-flex':'none';
+}
 function confirmDate(){var did=el('c-date-sel').value,v=el('c-venue').value.trim();if(!did){setHtml('c-msg','<div class="msg msg-error">\u65e5\u7a0b\u3092\u9078\u629e\u3057\u3066\u304f\u3060\u3055\u3044\u3002</div>');return;}if(!confirm('\u78ba\u5b9a\u3057\u3066\u5168\u53c2\u52a0\u8005\u306b\u901a\u77e5\u3057\u307e\u3059\u304b\uff1f'))return;setHtml('c-msg','<div class="msg msg-info">\u9001\u4fe1\u4e2d...</div>');google.script.run.withSuccessHandler(function(r){if(r.ok){setHtml('c-msg','<div class="msg msg-success">\u300c'+esc(r.confirmedDate)+'\u300d\u306b\u78ba\u5b9a\u3057\u307e\u3057\u305f\u3002</div>');loadAdminData();}else setHtml('c-msg','<div class="msg msg-error">\u5931\u6557\uff1a'+esc(r.error||'')+'</div>');}).adminConfirmDate(ADMIN_TOKEN,gCurrentMeetingId,did,v);}
+function updateConfirmedVenue(){
+  var v=(el('c-venue')||{}).value||'';v=v.trim();
+  if(!gCurrentMeetingId){setHtml('c-msg','<div class="msg msg-error">\u4f1a\u8b70\u304c\u9078\u629e\u3055\u308c\u3066\u3044\u307e\u305b\u3093\u3002</div>');return;}
+  if(!confirm('\u4f1a\u5834\u5909\u66f4\u3068\u3057\u3066\u4fdd\u5b58\u3057\u307e\u3059\u304b\uff1f\u5171\u901a\u30dd\u30fc\u30bf\u30eb\u3068\u524d\u65e5\u30ea\u30de\u30a4\u30f3\u30c9\u306b\u53cd\u6620\u3055\u308c\u307e\u3059\u3002'))return;
+  setHtml('c-msg','<div class="msg msg-info">\u4fdd\u5b58\u4e2d...</div>');
+  google.script.run.withSuccessHandler(function(r){
+    if(!r||!r.ok){setHtml('c-msg','<div class="msg msg-error">\u4fdd\u5b58\u5931\u6557\uff1a'+esc((r&&r.error)||'')+'</div>');return;}
+    if(r.changed===false){setHtml('c-msg','<div class="msg msg-info">\u4f1a\u5834\u306f\u5909\u66f4\u3055\u308c\u3066\u3044\u307e\u305b\u3093\u3002</div>');return;}
+    var extra=r.reminderWillRepeat?'\u524d\u65e5\u30ea\u30de\u30a4\u30f3\u30c9\u3092\u518d\u9001\u5bfe\u8c61\u306b\u623b\u3057\u307e\u3057\u305f\u3002':(r.reminderWillSend?'\u524d\u65e5\u30ea\u30de\u30a4\u30f3\u30c9\u306b\u5909\u66f4\u544a\u77e5\u304c\u5165\u308a\u307e\u3059\u3002':'\u5171\u901a\u30dd\u30fc\u30bf\u30eb\u306b\u53cd\u6620\u3057\u307e\u3057\u305f\u3002');
+    setHtml('c-msg','<div class="msg msg-success">'+esc(r.venueChangeNotice||'\u4f1a\u5834\u5909\u66f4\u3092\u4fdd\u5b58\u3057\u307e\u3057\u305f\u3002')+'<br>'+esc(extra)+'</div>');
+    loadAdminData();
+  }).withFailureHandler(function(err){setHtml('c-msg','<div class="msg msg-error">\u901a\u4fe1\u30a8\u30e9\u30fc\uff1a'+esc((err&&err.message)||String(err))+'</div>');}).adminUpdateVenue(ADMIN_TOKEN,gCurrentMeetingId,v);
+}
 function resetMeeting(){if(!confirm('\u30b9\u30c6\u30fc\u30bf\u30b9\u3092\u30ea\u30bb\u30c3\u30c8\u3057\u307e\u3059\u304b\uff1f'))return;google.script.run.withSuccessHandler(function(r){if(r.ok){alert('\u30ea\u30bb\u30c3\u30c8\u3057\u307e\u3057\u305f\u3002');loadAdminData();}}).adminReset(ADMIN_TOKEN,gCurrentMeetingId);}
 
 /* ===== Tab switching ===== */
